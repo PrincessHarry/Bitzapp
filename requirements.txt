@@ -1,0 +1,12 @@
+Django==5.2.7
+djangorestframework==3.14.0
+python-dotenv==1.1.1
+requests==2.32.5
+celery==5.3.4
+redis==6.4.0
+Pillow==10.0.1
+psycopg2-binary==2.9.7
+gunicorn==21.2.0
+whitenoise==6.5.0
+mnemonic==0.21
+bitcoinlib==0.7.5
