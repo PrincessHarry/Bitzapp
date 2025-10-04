@@ -254,8 +254,10 @@ def send_whatsapp_message(to_number: str, message: str):
         
         if response.status_code == 200:
             logger.info(f"WhatsApp message sent successfully to {to_number}")
+            logger.debug(f"WhatsApp API response: {response.json()}")
         else:
             logger.error(f"WhatsApp API error: {response.status_code} - {response.text}")
+            logger.error(f"WhatsApp API request data: {data}")
             
     except Exception as e:
         logger.error(f"Error sending WhatsApp message: {str(e)}")
