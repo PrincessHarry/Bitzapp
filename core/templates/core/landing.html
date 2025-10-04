@@ -1,0 +1,480 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bitzapp - Your Bitcoin Wallet in WhatsApp</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    animation: {
+                        'float': 'float 6s ease-in-out infinite',
+                        'pulse-slow': 'pulse 3s ease-in-out infinite',
+                        'bounce-slow': 'bounce 2s infinite',
+                        'fade-in': 'fadeIn 1s ease-in-out',
+                        'slide-up': 'slideUp 0.8s ease-out',
+                        'slide-in-left': 'slideInLeft 0.8s ease-out',
+                        'slide-in-right': 'slideInRight 0.8s ease-out',
+                    },
+                    keyframes: {
+                        float: {
+                            '0%, 100%': { transform: 'translateY(0px)' },
+                            '50%': { transform: 'translateY(-20px)' },
+                        },
+                        fadeIn: {
+                            '0%': { opacity: '0' },
+                            '100%': { opacity: '1' },
+                        },
+                        slideUp: {
+                            '0%': { transform: 'translateY(50px)', opacity: '0' },
+                            '100%': { transform: 'translateY(0)', opacity: '1' },
+                        },
+                        slideInLeft: {
+                            '0%': { transform: 'translateX(-50px)', opacity: '0' },
+                            '100%': { transform: 'translateX(0)', opacity: '1' },
+                        },
+                        slideInRight: {
+                            '0%': { transform: 'translateX(50px)', opacity: '0' },
+                            '100%': { transform: 'translateX(0)', opacity: '1' },
+                        },
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        .gradient-bg {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+        .bitcoin-gradient {
+            background: linear-gradient(135deg, #f7931a 0%, #ff6b35 100%);
+        }
+        .whatsapp-gradient {
+            background: linear-gradient(135deg, #25d366 0%, #128c7e 100%);
+        }
+        .lightning-gradient {
+            background: linear-gradient(135deg, #8b5cf6 0%, #a855f7 100%);
+        }
+        .glass-effect {
+            backdrop-filter: blur(10px);
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+        .hover-scale {
+            transition: transform 0.3s ease;
+        }
+        .hover-scale:hover {
+            transform: scale(1.05);
+        }
+        .text-shadow {
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+        }
+    </style>
+</head>
+<body class="bg-gray-900 text-white overflow-x-hidden">
+    <!-- Navigation -->
+    <nav class="fixed top-0 w-full z-50 glass-effect">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between items-center py-4">
+                <div class="flex items-center space-x-2">
+                    <div class="w-10 h-10 bitcoin-gradient rounded-lg flex items-center justify-center">
+                        <span class="text-2xl font-bold">₿</span>
+                    </div>
+                    <span class="text-2xl font-bold text-shadow">Bitzapp</span>
+                </div>
+                <div class="hidden md:flex space-x-8">
+                    <a href="#bitcoin" class="hover:text-yellow-400 transition-colors duration-300">Bitcoin</a>
+                    <a href="#lightning" class="hover:text-purple-400 transition-colors duration-300">Lightning</a>
+                    <a href="#whatsapp" class="hover:text-green-400 transition-colors duration-300">WhatsApp</a>
+                    <a href="#documentation" class="hover:text-blue-400 transition-colors duration-300">Documentation</a>
+                </div>
+                <div class="md:hidden">
+                    <button id="mobile-menu-btn" class="text-white">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path>
+                        </svg>
+                    </button>
+                </div>
+            </div>
+        </div>
+        <!-- Mobile Menu -->
+        <div id="mobile-menu" class="hidden md:hidden bg-gray-800 py-4">
+            <div class="px-4 space-y-2">
+                <a href="#bitcoin" class="block py-2 hover:text-yellow-400">Bitcoin</a>
+                <a href="#lightsapp" class="block py-2 hover:text-purple-400">Lightning</a>
+                <a href="#whatsapp" class="block py-2 hover:text-green-400">WhatsApp</a>
+                <a href="#documentation" class="block py-2 hover:text-blue-400">Documentation</a>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Hero Section -->
+    <section class="min-h-screen gradient-bg flex items-center justify-center relative overflow-hidden">
+        <!-- Floating Bitcoin Icons -->
+        <div class="absolute inset-0 overflow-hidden">
+            <div class="absolute top-20 left-10 text-6xl opacity-20 animate-float">₿</div>
+            <div class="absolute top-40 right-20 text-4xl opacity-20 animate-float" style="animation-delay: 1s;">₿</div>
+            <div class="absolute bottom-40 left-20 text-5xl opacity-20 animate-float" style="animation-delay: 2s;">₿</div>
+            <div class="absolute bottom-20 right-10 text-3xl opacity-20 animate-float" style="animation-delay: 3s;">₿</div>
+        </div>
+        
+        <div class="text-center z-10 max-w-4xl mx-auto px-4">
+            <h1 class="text-6xl md:text-8xl font-bold mb-6 animate-fade-in text-shadow">
+                <span class="bitcoin-gradient bg-clip-text text-transparent">Bitzapp</span>
+            </h1>
+            <p class="text-2xl md:text-3xl mb-8 animate-slide-up text-gray-200">
+                Your Bitcoin Wallet in WhatsApp
+            </p>
+            <p class="text-lg md:text-xl mb-12 animate-slide-up text-gray-300 max-w-2xl mx-auto" style="animation-delay: 0.3s;">
+                Send, receive, and manage Bitcoin directly through WhatsApp. 
+                Non-custodial wallets, Lightning Network support, and AI-powered assistance.
+            </p>
+            <div class="flex flex-col sm:flex-row gap-4 justify-center animate-slide-up" style="animation-delay: 0.6s;">
+                <button class="bitcoin-gradient px-8 py-4 rounded-lg font-semibold text-lg hover-scale shadow-lg">
+                    Start Using Bitcoin
+                </button>
+                <button class="glass-effect px-8 py-4 rounded-lg font-semibold text-lg hover-scale">
+                    View Documentation
+                </button>
+            </div>
+        </div>
+    </section>
+
+    <!-- Bitcoin Section -->
+    <section id="bitcoin" class="py-20 bg-gray-800">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="text-center mb-16">
+                <h2 class="text-4xl md:text-5xl font-bold mb-6 animate-slide-up">
+                    <span class="bitcoin-gradient bg-clip-text text-transparent">True Bitcoin</span>
+                </h2>
+                <p class="text-xl text-gray-300 animate-slide-up" style="animation-delay: 0.2s;">
+                    Non-custodial wallets where you control your private keys
+                </p>
+            </div>
+            
+            <div class="grid md:grid-cols-3 gap-8">
+                <div class="glass-effect p-8 rounded-xl hover-scale animate-slide-in-left">
+                    <div class="bitcoin-gradient w-16 h-16 rounded-lg flex items-center justify-center mb-6">
+                        <span class="text-3xl">🔐</span>
+                    </div>
+                    <h3 class="text-2xl font-bold mb-4">Non-Custodial</h3>
+                    <p class="text-gray-300">
+                        You control your private keys with 12-word seed phrases. 
+                        True decentralization with maximum security.
+                    </p>
+                </div>
+                
+                <div class="glass-effect p-8 rounded-xl hover-scale animate-slide-up" style="animation-delay: 0.2s;">
+                    <div class="bitcoin-gradient w-16 h-16 rounded-lg flex items-center justify-center mb-6">
+                        <span class="text-3xl">⚡</span>
+                    </div>
+                    <h3 class="text-2xl font-bold mb-4">Instant Transactions</h3>
+                    <p class="text-gray-300">
+                        Send Bitcoin instantly through WhatsApp. 
+                        No need for complex wallet apps or exchanges.
+                    </p>
+                </div>
+                
+                <div class="glass-effect p-8 rounded-xl hover-scale animate-slide-in-right" style="animation-delay: 0.4s;">
+                    <div class="bitcoin-gradient w-16 h-16 rounded-lg flex items-center justify-center mb-6">
+                        <span class="text-3xl">🏦</span>
+                    </div>
+                    <h3 class="text-2xl font-bold mb-4">Bank Integration</h3>
+                    <p class="text-gray-300">
+                        Deposit Naira and withdraw to Nigerian banks. 
+                        Seamless Bitcoin to local currency conversion.
+                    </p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Lightning Section -->
+    <section id="lightning" class="py-20 bg-gray-900">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="text-center mb-16">
+                <h2 class="text-4xl md:text-5xl font-bold mb-6 animate-slide-up">
+                    <span class="lightning-gradient bg-clip-text text-transparent">Lightning Network</span>
+                </h2>
+                <p class="text-xl text-gray-300 animate-slide-up" style="animation-delay: 0.2s;">
+                    Fast, cheap Bitcoin transactions powered by Lightning
+                </p>
+            </div>
+            
+            <div class="grid md:grid-cols-2 gap-12 items-center">
+                <div class="animate-slide-in-left">
+                    <div class="lightning-gradient p-8 rounded-xl">
+                        <h3 class="text-3xl font-bold mb-6">Lightning Fast Payments</h3>
+                        <ul class="space-y-4 text-lg">
+                            <li class="flex items-center">
+                                <span class="w-6 h-6 bg-white rounded-full flex items-center justify-center mr-4">
+                                    <span class="text-purple-600 font-bold">✓</span>
+                                </span>
+                                Instant Bitcoin transactions
+                            </li>
+                            <li class="flex items-center">
+                                <span class="w-6 h-6 bg-white rounded-full flex items-center justify-center mr-4">
+                                    <span class="text-purple-600 font-bold">✓</span>
+                                </span>
+                                Micro-fee payments
+                            </li>
+                            <li class="flex items-center">
+                                <span class="w-6 h-6 bg-white rounded-full flex items-center justify-center mr-4">
+                                    <span class="text-purple-600 font-bold">✓</span>
+                                </span>
+                                Scalable Bitcoin network
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+                
+                <div class="animate-slide-in-right">
+                    <div class="text-center">
+                        <div class="lightning-gradient w-32 h-32 rounded-full flex items-center justify-center mx-auto mb-8 animate-pulse-slow">
+                            <span class="text-6xl">⚡</span>
+                        </div>
+                        <p class="text-xl text-gray-300">
+                            Experience Bitcoin payments as fast as sending a WhatsApp message
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- WhatsApp Section -->
+    <section id="whatsapp" class="py-20 bg-gray-800">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="text-center mb-16">
+                <h2 class="text-4xl md:text-5xl font-bold mb-6 animate-slide-up">
+                    <span class="whatsapp-gradient bg-clip-text text-transparent">WhatsApp Integration</span>
+                </h2>
+                <p class="text-xl text-gray-300 animate-slide-up" style="animation-delay: 0.2s;">
+                    Bitcoin wallet functionality directly in your favorite messaging app
+                </p>
+            </div>
+            
+            <div class="grid md:grid-cols-2 gap-12 items-center">
+                <div class="animate-slide-in-left">
+                    <div class="whatsapp-gradient p-8 rounded-xl">
+                        <h3 class="text-3xl font-bold mb-6">Simple Commands</h3>
+                        <div class="space-y-4">
+                            <div class="bg-white bg-opacity-20 p-4 rounded-lg">
+                                <code class="text-lg">/create</code>
+                                <p class="text-sm mt-2">Create non-custodial wallet</p>
+                            </div>
+                            <div class="bg-white bg-opacity-20 p-4 rounded-lg">
+                                <code class="text-lg">/send 0.001 address</code>
+                                <p class="text-sm mt-2">Send Bitcoin instantly</p>
+                            </div>
+                            <div class="bg-white bg-opacity-20 p-4 rounded-lg">
+                                <code class="text-lg">/balance</code>
+                                <p class="text-sm mt-2">Check your Bitcoin balance</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="animate-slide-in-right">
+                    <div class="text-center">
+                        <div class="whatsapp-gradient w-32 h-32 rounded-full flex items-center justify-center mx-auto mb-8 animate-bounce-slow">
+                            <span class="text-6xl">💬</span>
+                        </div>
+                        <p class="text-xl text-gray-300 mb-8">
+                            No app downloads, no complex interfaces. 
+                            Just chat with Bitcoin in WhatsApp.
+                        </p>
+                        <div class="whatsapp-gradient px-6 py-3 rounded-lg inline-block">
+                            <span class="font-semibold">Start chatting with Bitcoin today!</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Features Section -->
+    <section class="py-20 bg-gray-900">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="text-center mb-16">
+                <h2 class="text-4xl md:text-5xl font-bold mb-6 animate-slide-up">
+                    Complete Bitcoin Ecosystem
+                </h2>
+                <p class="text-xl text-gray-300 animate-slide-up" style="animation-delay: 0.2s;">
+                    Everything you need for Bitcoin in Nigeria
+                </p>
+            </div>
+            
+            <div class="grid md:grid-cols-2 lg:grid-cols-4 gap-8">
+                <div class="glass-effect p-6 rounded-xl hover-scale animate-slide-in-left">
+                    <div class="text-4xl mb-4">💳</div>
+                    <h3 class="text-xl font-bold mb-2">Bill Payments</h3>
+                    <p class="text-gray-300 text-sm">Pay MTN, Airtel, electricity with Bitcoin</p>
+                </div>
+                
+                <div class="glass-effect p-6 rounded-xl hover-scale animate-slide-in-left" style="animation-delay: 0.1s;">
+                    <div class="text-4xl mb-4">🏦</div>
+                    <h3 class="text-xl font-bold mb-2">Bank Withdrawals</h3>
+                    <p class="text-gray-300 text-sm">Withdraw Bitcoin to Nigerian banks</p>
+                </div>
+                
+                <div class="glass-effect p-6 rounded-xl hover-scale animate-slide-in-left" style="animation-delay: 0.2s;">
+                    <div class="text-4xl mb-4">🤖</div>
+                    <h3 class="text-xl font-bold mb-2">AI Assistant</h3>
+                    <p class="text-gray-300 text-sm">Learn Bitcoin with AI-powered help</p>
+                </div>
+                
+                <div class="glass-effect p-6 rounded-xl hover-scale animate-slide-in-left" style="animation-delay: 0.3s;">
+                    <div class="text-4xl mb-4">🔒</div>
+                    <h3 class="text-xl font-bold mb-2">Secure</h3>
+                    <p class="text-gray-300 text-sm">Non-custodial with seed phrase control</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Documentation Section -->
+    <section id="documentation" class="py-20 bg-gray-800">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="text-center mb-16">
+                <h2 class="text-4xl md:text-5xl font-bold mb-6 animate-slide-up">
+                    Documentation
+                </h2>
+                <p class="text-xl text-gray-300 animate-slide-up" style="animation-delay: 0.2s;">
+                    Learn how to use Bitzapp effectively
+                </p>
+            </div>
+            
+            <div class="grid md:grid-cols-3 gap-8">
+                <div class="glass-effect p-8 rounded-xl hover-scale animate-slide-in-left">
+                    <h3 class="text-2xl font-bold mb-4">Getting Started</h3>
+                    <ul class="space-y-2 text-gray-300">
+                        <li>• Create your first wallet</li>
+                        <li>• Import existing wallet</li>
+                        <li>• Understanding seed phrases</li>
+                        <li>• Security best practices</li>
+                    </ul>
+                </div>
+                
+                <div class="glass-effect p-8 rounded-xl hover-scale animate-slide-up" style="animation-delay: 0.2s;">
+                    <h3 class="text-2xl font-bold mb-4">Commands</h3>
+                    <ul class="space-y-2 text-gray-300">
+                        <li>• /create - New wallet</li>
+                        <li>• /send - Send Bitcoin</li>
+                        <li>• /balance - Check balance</li>
+                        <li>• /paybill - Pay bills</li>
+                    </ul>
+                </div>
+                
+                <div class="glass-effect p-8 rounded-xl hover-scale animate-slide-in-right" style="animation-delay: 0.4s;">
+                    <h3 class="text-2xl font-bold mb-4">API Reference</h3>
+                    <ul class="space-y-2 text-gray-300">
+                        <li>• WhatsApp webhook</li>
+                        <li>• Bitcoin operations</li>
+                        <li>• Payment processing</li>
+                        <li>• Error handling</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- CTA Section -->
+    <section class="py-20 gradient-bg">
+        <div class="max-w-4xl mx-auto text-center px-4">
+            <h2 class="text-4xl md:text-5xl font-bold mb-6 animate-slide-up">
+                Ready to Use Bitcoin?
+            </h2>
+            <p class="text-xl mb-8 animate-slide-up text-gray-200" style="animation-delay: 0.2s;">
+                Join thousands of Nigerians using Bitcoin through WhatsApp
+            </p>
+            <div class="flex flex-col sm:flex-row gap-4 justify-center animate-slide-up" style="animation-delay: 0.4s;">
+                <button class="bitcoin-gradient px-8 py-4 rounded-lg font-semibold text-lg hover-scale shadow-lg">
+                    Start Now
+                </button>
+                <button class="glass-effect px-8 py-4 rounded-lg font-semibold text-lg hover-scale">
+                    Learn More
+                </button>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="bg-gray-900 py-12">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="text-center">
+                <div class="flex items-center justify-center space-x-2 mb-6">
+                    <div class="w-10 h-10 bitcoin-gradient rounded-lg flex items-center justify-center">
+                        <span class="text-2xl font-bold">₿</span>
+                    </div>
+                    <span class="text-2xl font-bold">Bitzapp</span>
+                </div>
+                <p class="text-gray-400 mb-6">
+                    Your Bitcoin Wallet in WhatsApp - Built for Nigeria
+                </p>
+                <div class="flex justify-center space-x-6">
+                    <a href="#" class="text-gray-400 hover:text-white transition-colors">Privacy</a>
+                    <a href="#" class="text-gray-400 hover:text-white transition-colors">Terms</a>
+                    <a href="#" class="text-gray-400 hover:text-white transition-colors">Support</a>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <script>
+        // Mobile menu toggle
+        document.getElementById('mobile-menu-btn').addEventListener('click', function() {
+            const mobileMenu = document.getElementById('mobile-menu');
+            mobileMenu.classList.toggle('hidden');
+        });
+
+        // Smooth scrolling for navigation links
+        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+            anchor.addEventListener('click', function (e) {
+                e.preventDefault();
+                const target = document.querySelector(this.getAttribute('href'));
+                if (target) {
+                    target.scrollIntoView({
+                        behavior: 'smooth',
+                        block: 'start'
+                    });
+                }
+            });
+        });
+
+        // Intersection Observer for animations
+        const observerOptions = {
+            threshold: 0.1,
+            rootMargin: '0px 0px -50px 0px'
+        };
+
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    entry.target.style.opacity = '1';
+                    entry.target.style.transform = 'translateY(0)';
+                }
+            });
+        }, observerOptions);
+
+        // Observe all animated elements
+        document.querySelectorAll('.animate-slide-up, .animate-slide-in-left, .animate-slide-in-right').forEach(el => {
+            el.style.opacity = '0';
+            el.style.transform = 'translateY(50px)';
+            observer.observe(el);
+        });
+
+        // Add hover effects to buttons
+        document.querySelectorAll('button').forEach(button => {
+            button.addEventListener('mouseenter', function() {
+                this.style.transform = 'scale(1.05)';
+            });
+            button.addEventListener('mouseleave', function() {
+                this.style.transform = 'scale(1)';
+            });
+        });
+    </script>
+</body>
+</html>

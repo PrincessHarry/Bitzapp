@@ -1,7 +1,4 @@
-"""
-WhatsApp webhook and command handlers for Bitzapp
-Processes incoming WhatsApp messages and executes Bitcoin wallet commands
-"""
+
 import json
 import logging
 import re
@@ -9,8 +6,10 @@ from decimal import Decimal
 from django.http import JsonResponse, HttpResponse
 from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_http_methods
+from django.shortcuts import render
 from django.conf import settings
 from django.contrib.auth.models import User
+
 from .models import BitzappUser, BitcoinWallet, Transaction
 from .command_handlers import (
     handle_create_wallet_command, handle_import_wallet_command, handle_wallet_info_command,
@@ -20,6 +19,14 @@ from .command_handlers import (
 )
 
 logger = logging.getLogger('bitzapp')
+VERIFY_TOKEN = "7032318369"
+
+
+def landing_page(request):
+    """
+    Landing page for Bitzapp
+    """
+    return render(request, 'core/landing.html')
 
 
 @csrf_exempt
@@ -43,7 +50,7 @@ def handle_webhook_verification(request):
         verify_token = request.GET.get('hub.verify_token')
         challenge = request.GET.get('hub.challenge')
         
-        if verify_token == settings.WHATSAPP_VERIFY_TOKEN:
+        if verify_token == '7032318369': 
             logger.info("WhatsApp webhook verified successfully")
             return HttpResponse(challenge)
         else:
