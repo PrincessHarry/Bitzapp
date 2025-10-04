@@ -31,6 +31,13 @@ def landing_page(request):
     return render(request, 'core/landing.html')
 
 
+def docs_page(request):
+    """
+    Documentation page for Bitzapp
+    """
+    return render(request, 'core/docs.html')
+
+
 @csrf_exempt
 @require_http_methods(["GET", "POST"])
 def whatsapp_webhook(request):

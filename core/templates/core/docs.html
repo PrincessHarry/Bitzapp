@@ -1,0 +1,877 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bitzapp Documentation - Bitcoin Wallet in WhatsApp</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    animation: {
+                        'fade-in': 'fadeIn 1s ease-in-out',
+                        'slide-up': 'slideUp 0.8s ease-out',
+                    },
+                    keyframes: {
+                        fadeIn: {
+                            '0%': { opacity: '0' },
+                            '100%': { opacity: '1' },
+                        },
+                        slideUp: {
+                            '0%': { transform: 'translateY(50px)', opacity: '0' },
+                            '100%': { transform: 'translateY(0)', opacity: '1' },
+                        },
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        .gradient-bg {
+            background: linear-gradient(135deg, #1e293b 0%, #334155 50%, #475569 100%);
+        }
+        .bitcoin-gradient {
+            background: linear-gradient(135deg, #f7931a 0%, #ff6b35 100%);
+        }
+        .whatsapp-gradient {
+            background: linear-gradient(135deg, #25d366 0%, #128c7e 100%);
+        }
+        .lightning-gradient {
+            background: linear-gradient(135deg, #8b5cf6 0%, #a855f7 100%);
+        }
+        .glass-effect {
+            backdrop-filter: blur(10px);
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+        .hover-scale {
+            transition: transform 0.3s ease;
+        }
+        .hover-scale:hover {
+            transform: scale(1.05);
+        }
+        .text-shadow {
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+        }
+        .code-block {
+            background: #1a1a1a;
+            border: 1px solid #333;
+            border-radius: 8px;
+            padding: 16px;
+            font-family: 'Courier New', monospace;
+            overflow-x: auto;
+        }
+        .command-example {
+            background: #2d3748;
+            border-left: 4px solid #f7931a;
+            padding: 12px 16px;
+            margin: 8px 0;
+            border-radius: 4px;
+        }
+    </style>
+</head>
+<body class="bg-gray-900 text-white">
+    <!-- Navigation -->
+    <nav class="fixed top-0 w-full z-50 glass-effect">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between items-center py-4">
+                <div class="flex items-center space-x-2">
+                    <div class="w-10 h-10 bg-gradient-to-br from-blue-500 to-purple-600 rounded-lg flex items-center justify-center">
+                        <span class="text-white font-bold text-lg">B</span>
+                    </div>
+                    <a href="/" class="text-2xl font-bold text-shadow">Bitzapp</a>
+                </div>
+                <div class="hidden md:flex space-x-8">
+                    <a href="/#bitcoin" class="hover:text-yellow-400 transition-colors duration-300">Bitcoin</a>
+                    <a href="/#lightning" class="hover:text-purple-400 transition-colors duration-300">Lightning</a>
+                    <a href="/#whatsapp" class="hover:text-green-400 transition-colors duration-300">WhatsApp</a>
+                    <a href="/docs" class="text-blue-400 font-semibold">Documentation</a>
+                </div>
+                <div class="md:hidden">
+                    <button id="mobile-menu-btn" class="text-white">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path>
+                        </svg>
+                    </button>
+                </div>
+            </div>
+        </div>
+        <!-- Mobile Menu -->
+        <div id="mobile-menu" class="hidden md:hidden bg-gray-800 py-4">
+            <div class="px-4 space-y-2">
+                <a href="/#bitcoin" class="block py-2 hover:text-yellow-400">Bitcoin</a>
+                <a href="/#lightning" class="block py-2 hover:text-purple-400">Lightning</a>
+                <a href="/#whatsapp" class="block py-2 hover:text-green-400">WhatsApp</a>
+                <a href="/docs" class="block py-2 text-blue-400 font-semibold">Documentation</a>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Documentation Header -->
+    <section class="pt-24 pb-12 gradient-bg">
+        <div class="max-w-4xl mx-auto px-4 text-center">
+            <h1 class="text-5xl md:text-6xl font-bold mb-6 animate-fade-in text-shadow">
+                <span class="bg-gradient-to-r from-blue-400 via-purple-400 to-blue-600 bg-clip-text text-transparent">Bitzapp</span> Documentation
+            </h1>
+            <p class="text-xl md:text-2xl mb-8 animate-slide-up text-gray-200">
+                Complete guide to using Bitcoin in WhatsApp
+            </p>
+            <p class="text-lg animate-slide-up text-gray-300" style="animation-delay: 0.2s;">
+                Non-custodial wallets, Lightning Network, and AI-powered assistance
+            </p>
+        </div>
+    </section>
+
+    <!-- Table of Contents -->
+    <section class="py-12 bg-gray-800">
+        <div class="max-w-6xl mx-auto px-4">
+            <h2 class="text-3xl font-bold mb-8 text-center">Table of Contents</h2>
+            <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+                <div class="glass-effect p-6 rounded-xl">
+                    <h3 class="text-xl font-bold mb-4">Getting Started</h3>
+                    <ul class="space-y-2 text-gray-300">
+                        <li><a href="#overview" class="hover:text-blue-400">Project Overview</a></li>
+                        <li><a href="#features" class="hover:text-blue-400">Key Features</a></li>
+                        <li><a href="#wallet-types" class="hover:text-blue-400">Wallet Types</a></li>
+                        <li><a href="#quick-start" class="hover:text-blue-400">Quick Start</a></li>
+                    </ul>
+                </div>
+                <div class="glass-effect p-6 rounded-xl">
+                    <h3 class="text-xl font-bold mb-4">Commands</h3>
+                    <ul class="space-y-2 text-gray-300">
+                        <li><a href="#wallet-commands" class="hover:text-blue-400">Wallet Management</a></li>
+                        <li><a href="#lightning-commands" class="hover:text-blue-400">Lightning Network</a></li>
+                        <li><a href="#bitcoin-commands" class="hover:text-blue-400">Bitcoin Operations</a></li>
+                        <li><a href="#payment-commands" class="hover:text-blue-400">Bill Payments</a></li>
+                    </ul>
+                </div>
+                <div class="glass-effect p-6 rounded-xl">
+                    <h3 class="text-xl font-bold mb-4">Technical</h3>
+                    <ul class="space-y-2 text-gray-300">
+                        <li><a href="#architecture" class="hover:text-blue-400">Architecture</a></li>
+                        <li><a href="#api-integration" class="hover:text-blue-400">API Integration</a></li>
+                        <li><a href="#security" class="hover:text-blue-400">Security</a></li>
+                        <li><a href="#deployment" class="hover:text-blue-400">Deployment</a></li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Main Documentation Content -->
+    <section class="py-12 bg-gray-900">
+        <div class="max-w-6xl mx-auto px-4">
+            
+            <!-- Project Overview -->
+            <div id="overview" class="mb-16">
+                <h2 class="text-4xl font-bold mb-6">Project Overview</h2>
+                <div class="glass-effect p-8 rounded-xl">
+                    <p class="text-lg text-gray-300 mb-6">
+                        Bitzapp is a hackathon-ready MVP that brings Bitcoin wallet functionality directly into WhatsApp. 
+                        Users can send, receive, and manage Bitcoin through simple text commands, with support for both 
+                        custodial and non-custodial wallets, Lightning Network payments, and AI-powered assistance.
+                    </p>
+                    <p class="text-lg text-gray-300 mb-6">
+                        Built specifically for the Nigerian market, Bitzapp integrates with local payment providers 
+                        like Bitnob and MavaPay to enable seamless Bitcoin-to-Naira conversions, bill payments, 
+                        and bank withdrawals.
+                    </p>
+                    <div class="code-block">
+                        <div class="text-green-400 mb-2">Key Technologies:</div>
+                        <div>• Django + Django REST Framework</div>
+                        <div>• SQLite (hackathon) / PostgreSQL (production)</div>
+                        <div>• Bitnob API (Bitcoin/Naira conversion)</div>
+                        <div>• MavaPay API (Bill payments)</div>
+                        <div>• Gemini AI (Chatbot)</div>
+                        <div>• WhatsApp Business API</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Key Features -->
+            <div id="features" class="mb-16">
+                <h2 class="text-4xl font-bold mb-6">Key Features</h2>
+                <div class="grid md:grid-cols-2 gap-8">
+                    <div class="glass-effect p-6 rounded-xl">
+                        <h3 class="text-2xl font-bold mb-4">Bitcoin Wallet Management</h3>
+                        <ul class="space-y-2 text-gray-300">
+                            <li>Non-custodial wallets with seed phrase control</li>
+                            <li>Custodial wallets for easy onboarding</li>
+                            <li>Send and receive Bitcoin directly</li>
+                            <li>Real-time balance checking</li>
+                            <li>Transaction history tracking</li>
+                        </ul>
+                    </div>
+                    <div class="glass-effect p-6 rounded-xl">
+                        <h3 class="text-2xl font-bold mb-4">Lightning Network</h3>
+                        <ul class="space-y-2 text-gray-300">
+                            <li>Instant Bitcoin payments</li>
+                            <li>Micro-fee transactions</li>
+                            <li>Scalable Bitcoin network</li>
+                            <li>Perfect for small payments</li>
+                            <li>BOLT11 invoice support</li>
+                        </ul>
+                    </div>
+                    <div class="glass-effect p-6 rounded-xl">
+                        <h3 class="text-2xl font-bold mb-4">Nigerian Integration</h3>
+                        <ul class="space-y-2 text-gray-300">
+                            <li>Naira deposits via Bitnob API</li>
+                            <li>Naira withdrawals to Nigerian banks</li>
+                            <li>Bill payments (MTN, Airtel, Electricity)</li>
+                            <li>Real-time BTC/NGN exchange rates</li>
+                            <li>Local payment provider integration</li>
+                        </ul>
+                    </div>
+                    <div class="glass-effect p-6 rounded-xl">
+                        <h3 class="text-2xl font-bold mb-4">AI-Powered Assistant</h3>
+                        <ul class="space-y-2 text-gray-300">
+                            <li>Bitcoin education and learning</li>
+                            <li>Transaction help and guidance</li>
+                            <li>Market insights and trends</li>
+                            <li>Command explanations</li>
+                            <li>Powered by Gemini AI</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Wallet Types -->
+            <div id="wallet-types" class="mb-16">
+                <h2 class="text-4xl font-bold mb-6">Wallet Types</h2>
+                <div class="grid md:grid-cols-2 gap-8">
+                    <div class="glass-effect p-8 rounded-xl">
+                        <h3 class="text-2xl font-bold mb-4">Non-Custodial Wallets</h3>
+                        <p class="text-gray-300 mb-4">
+                            Maximum security where users control their private keys through 12-word seed phrases.
+                        </p>
+                        <div class="space-y-3">
+                            <div class="command-example">
+                                <div class="text-green-400">Advantages:</div>
+                                <div>• You control your private keys</div>
+                                <div>• True decentralization</div>
+                                <div>• No single point of failure</div>
+                                <div>• Maximum security</div>
+                            </div>
+                            <div class="command-example">
+                                <div class="text-yellow-400">Considerations:</div>
+                                <div>• Must safely store seed phrase</div>
+                                <div>• Requires seed phrase for transactions</div>
+                                <div>• No recovery if seed phrase is lost</div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="glass-effect p-8 rounded-xl">
+                        <h3 class="text-2xl font-bold mb-4">Custodial Wallets</h3>
+                        <p class="text-gray-300 mb-4">
+                            Easy-to-use wallets where Bitzapp manages private keys for convenience.
+                        </p>
+                        <div class="space-y-3">
+                            <div class="command-example">
+                                <div class="text-green-400">Advantages:</div>
+                                <div>• Easy to use</div>
+                                <div>• No seed phrase needed</div>
+                                <div>• Simple transactions</div>
+                                <div>• Good for beginners</div>
+                            </div>
+                            <div class="command-example">
+                                <div class="text-yellow-400">Considerations:</div>
+                                <div>• We control your private keys</div>
+                                <div>• Centralized control</div>
+                                <div>• Less decentralized</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Quick Start -->
+            <div id="quick-start" class="mb-16">
+                <h2 class="text-4xl font-bold mb-6">Quick Start Guide</h2>
+                <div class="glass-effect p-8 rounded-xl">
+                    <h3 class="text-2xl font-bold mb-4">Step 1: Access Bitzapp</h3>
+                    <p class="text-gray-300 mb-4">
+                        Click any WhatsApp button on the landing page or visit: 
+                        <a href="https://wa.me/message/X3JCWOTQ5IKEF1" class="text-green-400 hover:underline">https://wa.me/message/X3JCWOTQ5IKEF1</a>
+                    </p>
+                    
+                    <h3 class="text-2xl font-bold mb-4 mt-8">Step 2: Create Your Wallet</h3>
+                    <div class="command-example">
+                        <div class="text-blue-400">Command:</div>
+                        <div>/create</div>
+                        <div class="text-gray-400 mt-2">Response: Creates non-custodial wallet with seed phrase</div>
+                    </div>
+                    
+                    <h3 class="text-2xl font-bold mb-4 mt-8">Step 3: Check Your Balance</h3>
+                    <div class="command-example">
+                        <div class="text-blue-400">Command:</div>
+                        <div>/balance</div>
+                        <div class="text-gray-400 mt-2">Response: Shows Bitcoin balance and Naira equivalent</div>
+                    </div>
+                    
+                    <h3 class="text-2xl font-bold mb-4 mt-8">Step 4: Start Using Bitcoin</h3>
+                    <div class="space-y-3">
+                        <div class="command-example">
+                            <div class="text-blue-400">Deposit Naira:</div>
+                            <div>/deposit 50000</div>
+                        </div>
+                        <div class="command-example">
+                            <div class="text-blue-400">Create Lightning Invoice:</div>
+                            <div>/lightning 1000</div>
+                        </div>
+                        <div class="command-example">
+                            <div class="text-blue-400">Pay Bills:</div>
+                            <div>/paybill mtn 1000 08012345678</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Wallet Commands -->
+            <div id="wallet-commands" class="mb-16">
+                <h2 class="text-4xl font-bold mb-6">Wallet Management Commands</h2>
+                <div class="space-y-8">
+                    <div class="glass-effect p-6 rounded-xl">
+                        <h3 class="text-2xl font-bold mb-4">/create</h3>
+                        <p class="text-gray-300 mb-4">Creates a new non-custodial Bitcoin wallet with a 12-word seed phrase.</p>
+                        <div class="command-example">
+                            <div class="text-blue-400">Usage:</div>
+                            <div>/create</div>
+                            <div class="text-gray-400 mt-2">Response: Generates seed phrase and Bitcoin address</div>
+                        </div>
+                        <div class="mt-4 p-4 bg-yellow-900 bg-opacity-30 rounded-lg">
+                            <div class="text-yellow-400 font-semibold">Warning:</div>
+                            <div class="text-gray-300">Save your seed phrase safely! We cannot recover it if lost.</div>
+                        </div>
+                    </div>
+
+                    <div class="glass-effect p-6 rounded-xl">
+                        <h3 class="text-2xl font-bold mb-4">/import</h3>
+                        <p class="text-gray-300 mb-4">Imports an existing wallet using a 12-word seed phrase.</p>
+                        <div class="command-example">
+                            <div class="text-blue-400">Usage:</div>
+                            <div>/import word1 word2 word3 ... word12</div>
+                            <div class="text-gray-400 mt-2">Response: Imports wallet and shows Bitcoin address</div>
+                        </div>
+                    </div>
+
+                    <div class="glass-effect p-6 rounded-xl">
+                        <h3 class="text-2xl font-bold mb-4">/wallet</h3>
+                        <p class="text-gray-300 mb-4">Shows information about wallet types and their differences.</p>
+                        <div class="command-example">
+                            <div class="text-blue-400">Usage:</div>
+                            <div>/wallet</div>
+                            <div class="text-gray-400 mt-2">Response: Explains custodial vs non-custodial wallets</div>
+                        </div>
+                    </div>
+
+                    <div class="glass-effect p-6 rounded-xl">
+                        <h3 class="text-2xl font-bold mb-4">/balance</h3>
+                        <p class="text-gray-300 mb-4">Shows your current Bitcoin balance and Naira equivalent.</p>
+                        <div class="command-example">
+                            <div class="text-blue-400">Usage:</div>
+                            <div>/balance</div>
+                            <div class="text-gray-400 mt-2">Response: Shows BTC amount, NGN equivalent, and wallet type</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Lightning Commands -->
+            <div id="lightning-commands" class="mb-16">
+                <h2 class="text-4xl font-bold mb-6">Lightning Network Commands</h2>
+                <div class="space-y-8">
+                    <div class="glass-effect p-6 rounded-xl">
+                        <h3 class="text-2xl font-bold mb-4">/lightning</h3>
+                        <p class="text-gray-300 mb-4">Creates a Lightning Network invoice for instant Bitcoin payments.</p>
+                        <div class="command-example">
+                            <div class="text-blue-400">Usage:</div>
+                            <div>/lightning &lt;amount_sats&gt; [description]</div>
+                            <div class="text-gray-400 mt-2">Examples:</div>
+                            <div>/lightning 1000</div>
+                            <div>/lightning 5000 Coffee payment</div>
+                        </div>
+                        <div class="mt-4 p-4 bg-purple-900 bg-opacity-30 rounded-lg">
+                            <div class="text-purple-400 font-semibold">Lightning Benefits:</div>
+                            <div class="text-gray-300">Instant payments, micro-fees, scalable network</div>
+                        </div>
+                    </div>
+
+                    <div class="glass-effect p-6 rounded-xl">
+                        <h3 class="text-2xl font-bold mb-4">/lightningpay</h3>
+                        <p class="text-gray-300 mb-4">Pays a Lightning Network invoice using a payment request.</p>
+                        <div class="command-example">
+                            <div class="text-blue-400">Usage:</div>
+                            <div>/lightningpay &lt;payment_request&gt; [description]</div>
+                            <div class="text-gray-400 mt-2">Example:</div>
+                            <div>/lightningpay lnbc1000u1p... Coffee payment</div>
+                        </div>
+                    </div>
+
+                    <div class="glass-effect p-6 rounded-xl">
+                        <h3 class="text-2xl font-bold mb-4">/lightningstatus</h3>
+                        <p class="text-gray-300 mb-4">Checks the status of a Lightning invoice.</p>
+                        <div class="command-example">
+                            <div class="text-blue-400">Usage:</div>
+                            <div>/lightningstatus &lt;invoice_id&gt;</div>
+                            <div class="text-gray-400 mt-2">Response: Shows payment status and details</div>
+                        </div>
+                    </div>
+
+                    <div class="glass-effect p-6 rounded-xl">
+                        <h3 class="text-2xl font-bold mb-4">/lightninghistory</h3>
+                        <p class="text-gray-300 mb-4">Shows your Lightning Network transaction history.</p>
+                        <div class="command-example">
+                            <div class="text-blue-400">Usage:</div>
+                            <div>/lightninghistory</div>
+                            <div class="text-gray-400 mt-2">Response: Lists recent Lightning invoices and payments</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Bitcoin Commands -->
+            <div id="bitcoin-commands" class="mb-16">
+                <h2 class="text-4xl font-bold mb-6">Bitcoin Operations Commands</h2>
+                <div class="space-y-8">
+                    <div class="glass-effect p-6 rounded-xl">
+                        <h3 class="text-2xl font-bold mb-4">/send</h3>
+                        <p class="text-gray-300 mb-4">Sends Bitcoin to another address.</p>
+                        <div class="command-example">
+                            <div class="text-blue-400">Custodial Usage:</div>
+                            <div>/send &lt;amount&gt; &lt;address&gt;</div>
+                            <div class="text-gray-400 mt-2">Non-Custodial Usage:</div>
+                            <div>/send &lt;amount&gt; &lt;address&gt; &lt;seed_phrase&gt;</div>
+                            <div class="text-gray-400 mt-2">Example:</div>
+                            <div>/send 0.001 bc1qxy2kgdygjrsqtzq2n0yrf2493p83kkfjhx0wlh</div>
+                        </div>
+                    </div>
+
+                    <div class="glass-effect p-6 rounded-xl">
+                        <h3 class="text-2xl font-bold mb-4">/receive</h3>
+                        <p class="text-gray-300 mb-4">Gets your Bitcoin address for receiving payments.</p>
+                        <div class="command-example">
+                            <div class="text-blue-400">Usage:</div>
+                            <div>/receive</div>
+                            <div class="text-gray-400 mt-2">Response: Shows your Bitcoin address</div>
+                        </div>
+                    </div>
+
+                    <div class="glass-effect p-6 rounded-xl">
+                        <h3 class="text-2xl font-bold mb-4">/deposit</h3>
+                        <p class="text-gray-300 mb-4">Creates a Naira deposit request to convert to Bitcoin.</p>
+                        <div class="command-example">
+                            <div class="text-blue-400">Usage:</div>
+                            <div>/deposit &lt;amount_ngn&gt;</div>
+                            <div class="text-gray-400 mt-2">Example:</div>
+                            <div>/deposit 50000</div>
+                            <div class="text-gray-400 mt-2">Response: Shows Bitcoin equivalent and deposit instructions</div>
+                        </div>
+                    </div>
+
+                    <div class="glass-effect p-6 rounded-xl">
+                        <h3 class="text-2xl font-bold mb-4">/withdraw</h3>
+                        <p class="text-gray-300 mb-4">Withdraws Bitcoin to a Nigerian bank account.</p>
+                        <div class="command-example">
+                            <div class="text-blue-400">Usage:</div>
+                            <div>/withdraw &lt;amount_btc&gt; &lt;account_number&gt; &lt;bank_name&gt; &lt;account_name&gt;</div>
+                            <div class="text-gray-400 mt-2">Example:</div>
+                            <div>/withdraw 0.001 1234567890 Access Bank John Doe</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Payment Commands -->
+            <div id="payment-commands" class="mb-16">
+                <h2 class="text-4xl font-bold mb-6">Bill Payment Commands</h2>
+                <div class="space-y-8">
+                    <div class="glass-effect p-6 rounded-xl">
+                        <h3 class="text-2xl font-bold mb-4">/paybill</h3>
+                        <p class="text-gray-300 mb-4">Pays Nigerian bills using Bitcoin.</p>
+                        <div class="command-example">
+                            <div class="text-blue-400">Usage:</div>
+                            <div>/paybill &lt;provider&gt; &lt;amount&gt; &lt;account&gt;</div>
+                            <div class="text-gray-400 mt-2">Examples:</div>
+                            <div>/paybill mtn 1000 08012345678</div>
+                            <div>/paybill airtel 2000 08098765432</div>
+                            <div>/paybill electricity 5000 12345678901</div>
+                        </div>
+                        <div class="mt-4 p-4 bg-green-900 bg-opacity-30 rounded-lg">
+                            <div class="text-green-400 font-semibold">Supported Providers:</div>
+                            <div class="text-gray-300">MTN, Airtel, Electricity, DSTV, School Fees</div>
+                        </div>
+                    </div>
+
+                    <div class="glass-effect p-6 rounded-xl">
+                        <h3 class="text-2xl font-bold mb-4">/bills</h3>
+                        <p class="text-gray-300 mb-4">Lists available bill payment providers.</p>
+                        <div class="command-example">
+                            <div class="text-blue-400">Usage:</div>
+                            <div>/bills</div>
+                            <div class="text-gray-400 mt-2">Response: Shows all supported bill providers</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- AI Assistant Commands -->
+            <div class="mb-16">
+                <h2 class="text-4xl font-bold mb-6">AI Assistant Commands</h2>
+                <div class="space-y-8">
+                    <div class="glass-effect p-6 rounded-xl">
+                        <h3 class="text-2xl font-bold mb-4">/ask</h3>
+                        <p class="text-gray-300 mb-4">Ask the AI assistant anything about Bitcoin or Bitzapp.</p>
+                        <div class="command-example">
+                            <div class="text-blue-400">Usage:</div>
+                            <div>/ask &lt;question&gt;</div>
+                            <div class="text-gray-400 mt-2">Examples:</div>
+                            <div>/ask What is Bitcoin?</div>
+                            <div>/ask How do I send Bitcoin?</div>
+                            <div>/ask What is Lightning Network?</div>
+                        </div>
+                    </div>
+
+                    <div class="glass-effect p-6 rounded-xl">
+                        <h3 class="text-2xl font-bold mb-4">/help</h3>
+                        <p class="text-gray-300 mb-4">Shows all available commands and their usage.</p>
+                        <div class="command-example">
+                            <div class="text-blue-400">Usage:</div>
+                            <div>/help</div>
+                            <div class="text-gray-400 mt-2">Response: Complete list of commands with examples</div>
+                        </div>
+                    </div>
+
+                    <div class="glass-effect p-6 rounded-xl">
+                        <h3 class="text-2xl font-bold mb-4">Natural Language Chat</h3>
+                        <p class="text-gray-300 mb-4">You can also chat naturally without commands.</p>
+                        <div class="command-example">
+                            <div class="text-blue-400">Examples:</div>
+                            <div>What is Bitcoin?</div>
+                            <div>How do I create a wallet?</div>
+                            <div>Explain Lightning Network</div>
+                            <div>Help me send Bitcoin</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Architecture -->
+            <div id="architecture" class="mb-16">
+                <h2 class="text-4xl font-bold mb-6">Technical Architecture</h2>
+                <div class="space-y-8">
+                    <div class="glass-effect p-6 rounded-xl">
+                        <h3 class="text-2xl font-bold mb-4">Django Application Structure</h3>
+                        <div class="code-block">
+                            <div class="text-green-400 mb-2">Project Structure:</div>
+                            <div>bitzapp/</div>
+                            <div>├── core/                    # Core models and views</div>
+                            <div>│   ├── models.py           # User, Wallet, Transaction models</div>
+                            <div>│   ├── views.py            # WhatsApp webhook handler</div>
+                            <div>│   └── command_handlers.py # Command processing logic</div>
+                            <div>├── wallet/                 # Bitcoin wallet services</div>
+                            <div>│   ├── models.py           # Wallet-specific models</div>
+                            <div>│   └── services.py         # Bitcoin operations</div>
+                            <div>├── payments/               # Payment processing</div>
+                            <div>│   ├── models.py           # Payment models</div>
+                            <div>│   └── services.py         # Bitnob/MavaPay integration</div>
+                            <div>├── chatbot/                # AI chatbot</div>
+                            <div>│   ├── models.py           # Chat models</div>
+                            <div>│   └── services.py         # Gemini AI integration</div>
+                            <div>└── tests/                  # Test scripts</div>
+                        </div>
+                    </div>
+
+                    <div class="glass-effect p-6 rounded-xl">
+                        <h3 class="text-2xl font-bold mb-4">Database Models</h3>
+                        <div class="code-block">
+                            <div class="text-green-400 mb-2">Core Models:</div>
+                            <div>• BitzappUser - Extended user with phone number</div>
+                            <div>• BitcoinWallet - Bitcoin wallet with address and balance</div>
+                            <div>• Transaction - All Bitcoin transactions</div>
+                            <div>• ExchangeRate - BTC/NGN exchange rates</div>
+                            <div>• BillProvider - Bill payment providers</div>
+                            <div class="text-green-400 mb-2 mt-4">Payment Models:</div>
+                            <div>• BillPayment - Bill payment transactions</div>
+                            <div>• NairaDeposit - Naira to Bitcoin deposits</div>
+                            <div>• NairaWithdrawal - Bitcoin to Naira withdrawals</div>
+                            <div>• LightningInvoice - Lightning Network invoices</div>
+                            <div>• LightningPayment - Lightning Network payments</div>
+                        </div>
+                    </div>
+
+                    <div class="glass-effect p-6 rounded-xl">
+                        <h3 class="text-2xl font-bold mb-4">Service Layer</h3>
+                        <div class="code-block">
+                            <div class="text-green-400 mb-2">Services:</div>
+                            <div>• BitcoinWalletService - Wallet operations</div>
+                            <div>• PaymentService - Payment processing</div>
+                            <div>• AIChatbotService - AI integration</div>
+                            <div class="text-gray-400 mt-4">Key Methods:</div>
+                            <div>• create_wallet_for_user() - Wallet creation</div>
+                            <div>• send_bitcoin() - Bitcoin transactions</div>
+                            <div>• create_lightning_invoice() - Lightning invoices</div>
+                            <div>• pay_bill() - Bill payments</div>
+                            <div>• process_ai_chat() - AI responses</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- API Integration -->
+            <div id="api-integration" class="mb-16">
+                <h2 class="text-4xl font-bold mb-6">API Integration</h2>
+                <div class="space-y-8">
+                    <div class="glass-effect p-6 rounded-xl">
+                        <h3 class="text-2xl font-bold mb-4">Bitnob API</h3>
+                        <p class="text-gray-300 mb-4">Primary Bitcoin/Naira conversion and Lightning Network provider.</p>
+                        <div class="code-block">
+                            <div class="text-green-400 mb-2">Endpoints Used:</div>
+                            <div>• /api/v1/rates/btc - Get BTC/NGN exchange rate</div>
+                            <div>• /api/v1/deposits - Create Naira deposits</div>
+                            <div>• /api/v1/withdrawals - Process Naira withdrawals</div>
+                            <div>• /api/v1/lightning/invoices - Create Lightning invoices</div>
+                            <div>• /api/v1/lightning/payments - Process Lightning payments</div>
+                        </div>
+                        <div class="mt-4 p-4 bg-orange-900 bg-opacity-30 rounded-lg">
+                            <div class="text-orange-400 font-semibold">Environment Variable:</div>
+                            <div class="text-gray-300">BITNOB_API_KEY=your_bitnob_api_key</div>
+                        </div>
+                    </div>
+
+                    <div class="glass-effect p-6 rounded-xl">
+                        <h3 class="text-2xl font-bold mb-4">MavaPay API</h3>
+                        <p class="text-gray-300 mb-4">Bill payment processing for Nigerian services.</p>
+                        <div class="code-block">
+                            <div class="text-green-400 mb-2">Endpoints Used:</div>
+                            <div>• /api/v1/bills/pay - Process bill payments</div>
+                            <div class="text-gray-400 mt-4">Supported Providers:</div>
+                            <div>• MTN, Airtel, Electricity, DSTV, School Fees</div>
+                        </div>
+                        <div class="mt-4 p-4 bg-blue-900 bg-opacity-30 rounded-lg">
+                            <div class="text-blue-400 font-semibold">Environment Variable:</div>
+                            <div class="text-gray-300">MAVAPAY_API_KEY=your_mavapay_api_key</div>
+                        </div>
+                    </div>
+
+                    <div class="glass-effect p-6 rounded-xl">
+                        <h3 class="text-2xl font-bold mb-4">Gemini AI API</h3>
+                        <p class="text-gray-300 mb-4">AI-powered chatbot for Bitcoin education and assistance.</p>
+                        <div class="code-block">
+                            <div class="text-green-400 mb-2">Features:</div>
+                            <div>• Bitcoin education and explanations</div>
+                            <div>• Command help and guidance</div>
+                            <div>• Market insights and trends</div>
+                            <div>• Natural language processing</div>
+                        </div>
+                        <div class="mt-4 p-4 bg-purple-900 bg-opacity-30 rounded-lg">
+                            <div class="text-purple-400 font-semibold">Environment Variable:</div>
+                            <div class="text-gray-300">GEMINI_API_KEY=your_gemini_api_key</div>
+                        </div>
+                    </div>
+
+                    <div class="glass-effect p-6 rounded-xl">
+                        <h3 class="text-2xl font-bold mb-4">WhatsApp Business API</h3>
+                        <p class="text-gray-300 mb-4">Message handling and webhook integration.</p>
+                        <div class="code-block">
+                            <div class="text-green-400 mb-2">Webhook URL:</div>
+                            <div>https://bitzapp-i3i3.onrender.com/webhook/whatsapp/</div>
+                            <div class="text-gray-400 mt-4">Features:</div>
+                            <div>• Message receiving and processing</div>
+                            <div>• Command routing and execution</div>
+                            <div>• Response formatting and sending</div>
+                            <div>• User management and verification</div>
+                        </div>
+                        <div class="mt-4 p-4 bg-green-900 bg-opacity-30 rounded-lg">
+                            <div class="text-green-400 font-semibold">Environment Variables:</div>
+                            <div class="text-gray-300">WHATSAPP_ACCESS_TOKEN=your_access_token</div>
+                            <div class="text-gray-300">WHATSAPP_PHONE_NUMBER_ID=your_phone_id</div>
+                            <div class="text-gray-300">WHATSAPP_VERIFY_TOKEN=your_verify_token</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Security -->
+            <div id="security" class="mb-16">
+                <h2 class="text-4xl font-bold mb-6">Security Features</h2>
+                <div class="space-y-8">
+                    <div class="glass-effect p-6 rounded-xl">
+                        <h3 class="text-2xl font-bold mb-4">Non-Custodial Security</h3>
+                        <div class="code-block">
+                            <div class="text-green-400 mb-2">Key Features:</div>
+                            <div>• Users control their private keys</div>
+                            <div>• 12-word seed phrase generation (BIP39)</div>
+                            <div>• No private key storage on servers</div>
+                            <div>• Seed phrase validation and verification</div>
+                            <div>• Temporary seed usage for transactions</div>
+                        </div>
+                    </div>
+
+                    <div class="glass-effect p-6 rounded-xl">
+                        <h3 class="text-2xl font-bold mb-4">Input Validation</h3>
+                        <div class="code-block">
+                            <div class="text-green-400 mb-2">Validation Rules:</div>
+                            <div>• Amount validation (positive numbers)</div>
+                            <div>• Bitcoin address format validation</div>
+                            <div>• Phone number formatting and verification</div>
+                            <div>• Command sanitization and parsing</div>
+                            <div>• Seed phrase mnemonic validation</div>
+                        </div>
+                    </div>
+
+                    <div class="glass-effect p-6 rounded-xl">
+                        <h3 class="text-2xl font-bold mb-4">Django Security</h3>
+                        <div class="code-block">
+                            <div class="text-green-400 mb-2">Security Measures:</div>
+                            <div>• CSRF protection on forms</div>
+                            <div>• SQL injection prevention</div>
+                            <div>• XSS protection</div>
+                            <div>• Secure session management</div>
+                            <div>• Environment variable configuration</div>
+                        </div>
+                    </div>
+
+                    <div class="glass-effect p-6 rounded-xl">
+                        <h3 class="text-2xl font-bold mb-4">Rate Limiting</h3>
+                        <div class="code-block">
+                            <div class="text-green-400 mb-2">Protection:</div>
+                            <div>• User rate limits</div>
+                            <div>• Command frequency limits</div>
+                            <div>• API rate limits</div>
+                            <div>• Spam protection</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Deployment -->
+            <div id="deployment" class="mb-16">
+                <h2 class="text-4xl font-bold mb-6">Deployment Guide</h2>
+                <div class="space-y-8">
+                    <div class="glass-effect p-6 rounded-xl">
+                        <h3 class="text-2xl font-bold mb-4">Environment Setup</h3>
+                        <div class="code-block">
+                            <div class="text-green-400 mb-2">Required Environment Variables:</div>
+                            <div># WhatsApp Business API</div>
+                            <div>WHATSAPP_ACCESS_TOKEN=your_whatsapp_token</div>
+                            <div>WHATSAPP_PHONE_NUMBER_ID=your_phone_number_id</div>
+                            <div>WHATSAPP_VERIFY_TOKEN=your_verify_token</div>
+                            <div></div>
+                            <div># Bitnob API</div>
+                            <div>BITNOB_API_KEY=your_bitnob_api_key</div>
+                            <div>BITNOB_BASE_URL=https://api.bitnob.com</div>
+                            <div></div>
+                            <div># MavaPay API</div>
+                            <div>MAVAPAY_API_KEY=your_mavapay_api_key</div>
+                            <div>MAVAPAY_BASE_URL=https://api.mavapay.co</div>
+                            <div></div>
+                            <div># Gemini API</div>
+                            <div>GEMINI_API_KEY=your_gemini_api_key</div>
+                        </div>
+                    </div>
+
+                    <div class="glass-effect p-6 rounded-xl">
+                        <h3 class="text-2xl font-bold mb-4">Database Migration</h3>
+                        <div class="command-example">
+                            <div class="text-blue-400">Commands:</div>
+                            <div>python manage.py makemigrations</div>
+                            <div>python manage.py migrate</div>
+                            <div>python manage.py setup_sample_data</div>
+                        </div>
+                    </div>
+
+                    <div class="glass-effect p-6 rounded-xl">
+                        <h3 class="text-2xl font-bold mb-4">Production Deployment</h3>
+                        <div class="code-block">
+                            <div class="text-green-400 mb-2">Recommended Stack:</div>
+                            <div>• PostgreSQL database</div>
+                            <div>• Redis for caching</div>
+                            <div>• Celery for background tasks</div>
+                            <div>• Gunicorn for production server</div>
+                            <div>• Nginx for reverse proxy</div>
+                            <div>• SSL certificates for HTTPS</div>
+                        </div>
+                    </div>
+
+                    <div class="glass-effect p-6 rounded-xl">
+                        <h3 class="text-2xl font-bold mb-4">Webhook Configuration</h3>
+                        <div class="code-block">
+                            <div class="text-green-400 mb-2">WhatsApp Webhook Setup:</div>
+                            <div>Webhook URL: https://your-domain.com/webhook/whatsapp/</div>
+                            <div>Verify Token: [Your WHATSAPP_VERIFY_TOKEN]</div>
+                            <div>Webhook Fields: messages, message_deliveries</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Footer -->
+            <div class="mt-16 pt-8 border-t border-gray-700">
+                <div class="text-center">
+                    <h3 class="text-2xl font-bold mb-4">Need More Help?</h3>
+                    <p class="text-gray-300 mb-6">
+                        Contact us through WhatsApp or ask the AI assistant for assistance.
+                    </p>
+                    <div class="flex flex-col sm:flex-row gap-4 justify-center">
+                        <a href="https://wa.me/message/X3JCWOTQ5IKEF1" target="_blank" class="whatsapp-gradient px-8 py-4 rounded-lg font-semibold text-lg hover-scale shadow-lg flex items-center justify-center space-x-2">
+                            <svg class="w-6 h-6" fill="currentColor" viewBox="0 0 24 24">
+                                <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893A11.821 11.821 0 0020.885 3.488"/>
+                            </svg>
+                            <span>Use Bitzapp</span>
+                        </a>
+                        <a href="/" class="glass-effect px-8 py-4 rounded-lg font-semibold text-lg hover-scale">
+                            Back to Home
+                        </a>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </section>
+
+    <script>
+        // Mobile menu toggle
+        document.getElementById('mobile-menu-btn').addEventListener('click', function() {
+            const mobileMenu = document.getElementById('mobile-menu');
+            mobileMenu.classList.toggle('hidden');
+        });
+
+        // Smooth scrolling for navigation links
+        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+            anchor.addEventListener('click', function (e) {
+                e.preventDefault();
+                const target = document.querySelector(this.getAttribute('href'));
+                if (target) {
+                    target.scrollIntoView({
+                        behavior: 'smooth',
+                        block: 'start'
+                    });
+                }
+            });
+        });
+
+        // Intersection Observer for animations
+        const observerOptions = {
+            threshold: 0.1,
+            rootMargin: '0px 0px -50px 0px'
+        };
+
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    entry.target.style.opacity = '1';
+                    entry.target.style.transform = 'translateY(0)';
+                }
+            });
+        }, observerOptions);
+
+        // Observe all animated elements
+        document.querySelectorAll('.animate-slide-up').forEach(el => {
+            el.style.opacity = '0';
+            el.style.transform = 'translateY(50px)';
+            observer.observe(el);
+        });
+    </script>
+</body>
+</html>
