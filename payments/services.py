@@ -8,7 +8,7 @@ from decimal import Decimal
 from django.conf import settings
 from django.db import transaction
 from core.models import BitzappUser, Transaction, ExchangeRate, BillProvider
-from payments.models import BillPayment, NairaDeposit, ExchangeRateHistory, NairaWithdrawal
+from payments.models import BillPayment, NairaDeposit, ExchangeRateHistory, NairaWithdrawal, LightningInvoice, LightningPayment
 
 logger = logging.getLogger('bitzapp')
 
@@ -666,3 +666,379 @@ class PaymentService:
         except Exception as e:
             logger.error(f"Error processing demo withdrawal: {str(e)}")
             return False
+    
+    # Lightning Network Methods
+    
+    def create_lightning_invoice(self, user: BitzappUser, amount_sats: int, description: str = "", memo: str = "") -> LightningInvoice:
+        """
+        Create a Lightning Network invoice using Bitnob API
+        """
+        try:
+            from datetime import datetime, timedelta
+            
+            # Convert satoshis to BTC and NGN
+            amount_btc = Decimal(amount_sats) / Decimal('100000000')  # 1 BTC = 100M sats
+            exchange_rate = self._get_current_exchange_rate()
+            amount_ngn = amount_btc * exchange_rate
+            
+            # Create Lightning invoice using Bitnob API
+            if not self.bitnob_api_key:
+                logger.warning("Bitnob API key not configured, using demo mode")
+                return self._create_demo_lightning_invoice(user, amount_sats, amount_btc, amount_ngn, description, memo)
+            
+            headers = {
+                'Authorization': f'Bearer {self.bitnob_api_key}',
+                'Content-Type': 'application/json'
+            }
+            
+            # Prepare invoice data for Bitnob Lightning API
+            data = {
+                'amount': amount_sats,
+                'currency': 'sats',
+                'description': description or f'Lightning invoice for {user.phone_number}',
+                'memo': memo or f'Bitzapp Lightning Payment',
+                'expiry': 3600,  # 1 hour expiry
+                'customer_reference': user.phone_number
+            }
+            
+            response = requests.post(
+                f"{self.bitnob_base_url}/api/v1/lightning/invoices",
+                headers=headers,
+                json=data,
+                timeout=15
+            )
+            
+            if response.status_code == 200:
+                result = response.json()
+                
+                # Create Lightning invoice record
+                invoice = LightningInvoice.objects.create(
+                    user=user,
+                    payment_request=result.get('payment_request'),
+                    payment_hash=result.get('payment_hash'),
+                    amount_sats=amount_sats,
+                    amount_btc=amount_btc,
+                    amount_ngn=amount_ngn,
+                    description=description,
+                    memo=memo,
+                    expires_at=datetime.now() + timedelta(hours=1),
+                    provider_transaction_id=result.get('id'),
+                    provider_response=result.get('status')
+                )
+                
+                logger.info(f"Created Lightning invoice: {amount_sats} sats for {user.phone_number}")
+                return invoice
+            else:
+                logger.error(f"Bitnob Lightning invoice error: {response.status_code} - {response.text}")
+                raise ValueError("Failed to create Lightning invoice with Bitnob")
+                
+        except Exception as e:
+            logger.error(f"Error creating Lightning invoice: {str(e)}")
+            raise
+    
+    def _create_demo_lightning_invoice(self, user: BitzappUser, amount_sats: int, amount_btc: Decimal, 
+                                     amount_ngn: Decimal, description: str, memo: str) -> LightningInvoice:
+        """
+        Create demo Lightning invoice when APIs are not configured
+        """
+        try:
+            from datetime import datetime, timedelta
+            
+            # Generate demo payment request (fake BOLT11 format)
+            demo_payment_request = f"lnbc{amount_sats}u1p{amount_sats}sp1..."  # Simplified demo format
+            
+            invoice = LightningInvoice.objects.create(
+                user=user,
+                payment_request=demo_payment_request,
+                payment_hash=f"demo_hash_{amount_sats}_{user.id}",
+                amount_sats=amount_sats,
+                amount_btc=amount_btc,
+                amount_ngn=amount_ngn,
+                description=description,
+                memo=memo,
+                expires_at=datetime.now() + timedelta(hours=1),
+                provider_transaction_id=f"DEMO_LIGHTNING_{amount_sats}",
+                provider_response="Demo Lightning invoice created"
+            )
+            
+            logger.info(f"Created demo Lightning invoice: {amount_sats} sats for {user.phone_number}")
+            return invoice
+            
+        except Exception as e:
+            logger.error(f"Error creating demo Lightning invoice: {str(e)}")
+            raise
+    
+    def pay_lightning_invoice(self, user: BitzappUser, payment_request: str, description: str = "", memo: str = "") -> LightningPayment:
+        """
+        Pay a Lightning Network invoice using Bitnob API
+        """
+        try:
+            # Parse payment request to get amount (simplified for demo)
+            # In production, use proper BOLT11 parsing library
+            amount_sats = self._parse_payment_request_amount(payment_request)
+            amount_btc = Decimal(amount_sats) / Decimal('100000000')
+            exchange_rate = self._get_current_exchange_rate()
+            amount_ngn = amount_btc * exchange_rate
+            
+            # Check user's Bitcoin balance
+            from core.models import BitcoinWallet
+            user_wallet = BitcoinWallet.objects.get(user=user)
+            
+            if user_wallet.balance_btc < amount_btc:
+                raise ValueError("Insufficient Bitcoin balance")
+            
+            # Create Lightning payment using Bitnob API
+            if not self.bitnob_api_key:
+                logger.warning("Bitnob API key not configured, using demo mode")
+                return self._create_demo_lightning_payment(user, payment_request, amount_sats, amount_btc, amount_ngn, description, memo)
+            
+            headers = {
+                'Authorization': f'Bearer {self.bitnob_api_key}',
+                'Content-Type': 'application/json'
+            }
+            
+            # Prepare payment data for Bitnob Lightning API
+            data = {
+                'payment_request': payment_request,
+                'description': description or f'Lightning payment from {user.phone_number}',
+                'memo': memo or 'Bitzapp Lightning Payment',
+                'customer_reference': user.phone_number
+            }
+            
+            response = requests.post(
+                f"{self.bitnob_base_url}/api/v1/lightning/payments",
+                headers=headers,
+                json=data,
+                timeout=15
+            )
+            
+            if response.status_code == 200:
+                result = response.json()
+                
+                # Create Lightning payment record
+                payment = LightningPayment.objects.create(
+                    user=user,
+                    payment_request=payment_request,
+                    payment_hash=result.get('payment_hash'),
+                    amount_sats=amount_sats,
+                    amount_btc=amount_btc,
+                    amount_ngn=amount_ngn,
+                    description=description,
+                    memo=memo,
+                    provider_transaction_id=result.get('id'),
+                    provider_response=result.get('status')
+                )
+                
+                # Update user's Bitcoin balance
+                user_wallet.balance_btc -= amount_btc
+                user_wallet.save()
+                
+                # Create transaction record
+                Transaction.objects.create(
+                    user=user,
+                    transaction_type='lightning_payment',
+                    amount_btc=amount_btc,
+                    amount_ngn=amount_ngn,
+                    description=f"Lightning payment: {amount_sats} sats",
+                    exchange_rate=exchange_rate,
+                    status='completed'
+                )
+                
+                # Update payment status
+                payment.status = 'completed'
+                payment.completed_at = payment.updated_at
+                payment.save()
+                
+                logger.info(f"Processed Lightning payment: {amount_sats} sats for {user.phone_number}")
+                return payment
+            else:
+                logger.error(f"Bitnob Lightning payment error: {response.status_code} - {response.text}")
+                raise ValueError("Failed to process Lightning payment with Bitnob")
+                
+        except Exception as e:
+            logger.error(f"Error processing Lightning payment: {str(e)}")
+            raise
+    
+    def _create_demo_lightning_payment(self, user: BitzappUser, payment_request: str, amount_sats: int, 
+                                     amount_btc: Decimal, amount_ngn: Decimal, description: str, memo: str) -> LightningPayment:
+        """
+        Create demo Lightning payment when APIs are not configured
+        """
+        try:
+            # Check user's Bitcoin balance
+            from core.models import BitcoinWallet
+            user_wallet = BitcoinWallet.objects.get(user=user)
+            
+            if user_wallet.balance_btc < amount_btc:
+                raise ValueError("Insufficient Bitcoin balance")
+            
+            # Create Lightning payment record
+            payment = LightningPayment.objects.create(
+                user=user,
+                payment_request=payment_request,
+                payment_hash=f"demo_payment_hash_{amount_sats}_{user.id}",
+                amount_sats=amount_sats,
+                amount_btc=amount_btc,
+                amount_ngn=amount_ngn,
+                description=description,
+                memo=memo,
+                provider_transaction_id=f"DEMO_LIGHTNING_PAYMENT_{amount_sats}",
+                provider_response="Demo Lightning payment processed"
+            )
+            
+            # Update user's Bitcoin balance
+            user_wallet.balance_btc -= amount_btc
+            user_wallet.save()
+            
+            # Create transaction record
+            exchange_rate = self._get_current_exchange_rate()
+            Transaction.objects.create(
+                user=user,
+                transaction_type='lightning_payment',
+                amount_btc=amount_btc,
+                amount_ngn=amount_ngn,
+                description=f"Lightning payment: {amount_sats} sats",
+                exchange_rate=exchange_rate,
+                status='completed'
+            )
+            
+            # Update payment status
+            payment.status = 'completed'
+            payment.completed_at = payment.updated_at
+            payment.save()
+            
+            logger.info(f"Processed demo Lightning payment: {amount_sats} sats for {user.phone_number}")
+            return payment
+            
+        except Exception as e:
+            logger.error(f"Error creating demo Lightning payment: {str(e)}")
+            raise
+    
+    def _parse_payment_request_amount(self, payment_request: str) -> int:
+        """
+        Parse Lightning payment request to extract amount in satoshis
+        Simplified implementation for demo purposes
+        """
+        try:
+            # This is a simplified parser for demo purposes
+            # In production, use proper BOLT11 parsing library like pyln-client
+            
+            # Extract amount from payment request (simplified regex)
+            import re
+            
+            # Look for amount pattern in BOLT11 format
+            amount_match = re.search(r'lnbc(\d+)', payment_request)
+            if amount_match:
+                return int(amount_match.group(1))
+            
+            # Fallback: return a default amount for demo
+            return 1000  # 1000 sats default
+            
+        except Exception as e:
+            logger.error(f"Error parsing payment request amount: {str(e)}")
+            return 1000  # Default fallback
+    
+    def get_lightning_invoice_status(self, invoice: LightningInvoice) -> dict:
+        """
+        Check Lightning invoice status using Bitnob API
+        """
+        try:
+            if not self.bitnob_api_key:
+                logger.warning("Bitnob API key not configured, returning demo status")
+                return {
+                    'status': 'paid' if invoice.status == 'paid' else 'pending',
+                    'paid_at': invoice.paid_at.isoformat() if invoice.paid_at else None,
+                    'amount_sats': invoice.amount_sats
+                }
+            
+            headers = {
+                'Authorization': f'Bearer {self.bitnob_api_key}',
+                'Content-Type': 'application/json'
+            }
+            
+            response = requests.get(
+                f"{self.bitnob_base_url}/api/v1/lightning/invoices/{invoice.provider_transaction_id}",
+                headers=headers,
+                timeout=10
+            )
+            
+            if response.status_code == 200:
+                result = response.json()
+                
+                # Update invoice status if changed
+                if result.get('status') == 'paid' and invoice.status != 'paid':
+                    invoice.status = 'paid'
+                    from datetime import datetime
+                    invoice.paid_at = datetime.now()
+                    invoice.save()
+                
+                return {
+                    'status': result.get('status'),
+                    'paid_at': result.get('paid_at'),
+                    'amount_sats': invoice.amount_sats
+                }
+            else:
+                logger.error(f"Bitnob Lightning invoice status error: {response.status_code} - {response.text}")
+                return {
+                    'status': invoice.status,
+                    'paid_at': invoice.paid_at.isoformat() if invoice.paid_at else None,
+                    'amount_sats': invoice.amount_sats
+                }
+                
+        except Exception as e:
+            logger.error(f"Error checking Lightning invoice status: {str(e)}")
+            return {
+                'status': invoice.status,
+                'paid_at': invoice.paid_at.isoformat() if invoice.paid_at else None,
+                'amount_sats': invoice.amount_sats
+            }
+    
+    def get_lightning_payment_history(self, user: BitzappUser, limit: int = 10) -> list:
+        """
+        Get user's Lightning payment history
+        """
+        try:
+            # Get Lightning invoices
+            invoices = LightningInvoice.objects.filter(
+                user=user
+            ).order_by('-created_at')[:limit]
+            
+            # Get Lightning payments
+            payments = LightningPayment.objects.filter(
+                user=user
+            ).order_by('-created_at')[:limit]
+            
+            history = []
+            
+            # Add invoices to history
+            for invoice in invoices:
+                history.append({
+                    'type': 'lightning_invoice',
+                    'amount_sats': invoice.amount_sats,
+                    'amount_btc': float(invoice.amount_btc),
+                    'amount_ngn': float(invoice.amount_ngn),
+                    'status': invoice.status,
+                    'payment_request': invoice.payment_request[:50] + '...' if len(invoice.payment_request) > 50 else invoice.payment_request,
+                    'created_at': invoice.created_at.isoformat()
+                })
+            
+            # Add payments to history
+            for payment in payments:
+                history.append({
+                    'type': 'lightning_payment',
+                    'amount_sats': payment.amount_sats,
+                    'amount_btc': float(payment.amount_btc),
+                    'amount_ngn': float(payment.amount_ngn),
+                    'status': payment.status,
+                    'payment_request': payment.payment_request[:50] + '...' if len(payment.payment_request) > 50 else payment.payment_request,
+                    'created_at': payment.created_at.isoformat()
+                })
+            
+            # Sort by creation date
+            history.sort(key=lambda x: x['created_at'], reverse=True)
+            
+            return history[:limit]
+            
+        except Exception as e:
+            logger.error(f"Error getting Lightning payment history for {user.phone_number}: {str(e)}")
+            return []

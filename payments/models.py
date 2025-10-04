@@ -3,6 +3,104 @@ from decimal import Decimal
 import uuid
 
 
+class LightningInvoice(models.Model):
+    """
+    Lightning Network invoices for instant Bitcoin payments
+    """
+    STATUS_CHOICES = [
+        ('pending', 'Pending'),
+        ('paid', 'Paid'),
+        ('expired', 'Expired'),
+        ('cancelled', 'Cancelled'),
+    ]
+    
+    user = models.ForeignKey('core.BitzappUser', on_delete=models.CASCADE, related_name='lightning_invoices')
+    
+    # Invoice details
+    invoice_id = models.UUIDField(default=uuid.uuid4, unique=True, help_text="Unique invoice ID")
+    payment_request = models.CharField(max_length=1000, help_text="Lightning payment request (BOLT11)")
+    payment_hash = models.CharField(max_length=64, help_text="Payment hash")
+    
+    # Amount details
+    amount_sats = models.IntegerField(help_text="Amount in satoshis")
+    amount_btc = models.DecimalField(max_digits=20, decimal_places=8, help_text="Amount in BTC")
+    amount_ngn = models.DecimalField(max_digits=15, decimal_places=2, help_text="Amount in Naira")
+    
+    # Description and metadata
+    description = models.TextField(blank=True, help_text="Invoice description")
+    memo = models.CharField(max_length=200, blank=True, help_text="Invoice memo")
+    
+    # Status and timing
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='pending')
+    expires_at = models.DateTimeField(help_text="Invoice expiration time")
+    
+    # Provider details
+    provider_transaction_id = models.CharField(max_length=100, blank=True, help_text="Bitnob transaction ID")
+    provider_response = models.TextField(blank=True, help_text="Provider response data")
+    
+    # Timestamps
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    paid_at = models.DateTimeField(null=True, blank=True)
+    
+    class Meta:
+        verbose_name = "Lightning Invoice"
+        verbose_name_plural = "Lightning Invoices"
+        ordering = ['-created_at']
+    
+    def __str__(self):
+        return f"Lightning Invoice {self.invoice_id} - {self.amount_sats} sats"
+
+
+class LightningPayment(models.Model):
+    """
+    Lightning Network payments (outgoing)
+    """
+    STATUS_CHOICES = [
+        ('pending', 'Pending'),
+        ('processing', 'Processing'),
+        ('completed', 'Completed'),
+        ('failed', 'Failed'),
+        ('cancelled', 'Cancelled'),
+    ]
+    
+    user = models.ForeignKey('core.BitzappUser', on_delete=models.CASCADE, related_name='lightning_payments')
+    
+    # Payment details
+    payment_id = models.UUIDField(default=uuid.uuid4, unique=True, help_text="Unique payment ID")
+    payment_request = models.CharField(max_length=1000, help_text="Lightning payment request (BOLT11)")
+    payment_hash = models.CharField(max_length=64, blank=True, help_text="Payment hash")
+    
+    # Amount details
+    amount_sats = models.IntegerField(help_text="Amount in satoshis")
+    amount_btc = models.DecimalField(max_digits=20, decimal_places=8, help_text="Amount in BTC")
+    amount_ngn = models.DecimalField(max_digits=15, decimal_places=2, help_text="Amount in Naira")
+    
+    # Description and metadata
+    description = models.TextField(blank=True, help_text="Payment description")
+    memo = models.CharField(max_length=200, blank=True, help_text="Payment memo")
+    
+    # Status and timing
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='pending')
+    
+    # Provider details
+    provider_transaction_id = models.CharField(max_length=100, blank=True, help_text="Bitnob transaction ID")
+    provider_response = models.TextField(blank=True, help_text="Provider response data")
+    
+    # Timestamps
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    completed_at = models.DateTimeField(null=True, blank=True)
+    
+    class Meta:
+        verbose_name = "Lightning Payment"
+        verbose_name_plural = "Lightning Payments"
+        ordering = ['-created_at']
+    
+    def __str__(self):
+        return f"Lightning Payment {self.payment_id} - {self.amount_sats} sats"
+
+
 class BillPayment(models.Model):
     """
     Bill payment transactions

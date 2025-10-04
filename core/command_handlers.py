@@ -543,46 +543,336 @@ Just ask me anything! 🚀"""
         return "Sorry, I couldn't process your question. Please try again."
 
 
+def handle_lightning_invoice_command(user: BitzappUser, message: str) -> str:
+    """
+    Handle /lightning command to create Lightning invoice
+    Usage: /lightning <amount_sats> [description]
+    """
+    try:
+        # Parse command
+        parts = message.split()
+        if len(parts) < 2:
+            return """⚡ Lightning Invoice Command
+
+**Usage:** `/lightning <amount_sats> [description]`
+
+**Examples:**
+• `/lightning 1000` - Create 1000 sats invoice
+• `/lightning 5000 Coffee payment` - Create 5000 sats invoice with description
+
+**Lightning Network Benefits:**
+⚡ Instant Bitcoin payments
+⚡ Low fees (micro-fees)
+⚡ Scalable Bitcoin network
+⚡ Perfect for small payments
+
+**Note:** Lightning invoices expire in 1 hour"""
+        
+        try:
+            amount_sats = int(parts[1])
+            if amount_sats <= 0:
+                return "❌ Amount must be greater than 0 satoshis"
+        except ValueError:
+            return "❌ Invalid amount. Please provide a number of satoshis"
+        
+        description = " ".join(parts[2:]) if len(parts) > 2 else f"Lightning invoice for {user.phone_number}"
+        
+        # Create Lightning invoice
+        payment_service = PaymentService()
+        invoice = payment_service.create_lightning_invoice(user, amount_sats, description)
+        
+        return f"""⚡ Lightning Invoice Created!
+
+**Amount:** {amount_sats:,} sats ({invoice.amount_btc:.8f} BTC)
+**Naira Value:** ₦{invoice.amount_ngn:,.2f}
+**Description:** {description}
+
+**Payment Request:**
+`{invoice.payment_request}`
+
+**Invoice Details:**
+• Invoice ID: `{invoice.invoice_id}`
+• Expires: {invoice.expires_at.strftime('%Y-%m-%d %H:%M:%S')} UTC
+• Status: {invoice.status.title()}
+
+**How to Pay:**
+1. Copy the payment request above
+2. Use any Lightning wallet (Phoenix, Breez, etc.)
+3. Scan or paste the payment request
+4. Confirm the payment
+
+**Lightning Benefits:**
+⚡ Instant confirmation
+⚡ Micro-fee payments
+⚡ Scalable Bitcoin network
+
+Your Lightning invoice is ready! 🚀"""
+        
+    except Exception as e:
+        logger.error(f"Error creating Lightning invoice: {str(e)}")
+        return f"❌ Error creating Lightning invoice: {str(e)}"
+
+
+def handle_lightning_pay_command(user: BitzappUser, message: str) -> str:
+    """
+    Handle /lightningpay command to pay Lightning invoice
+    Usage: /lightningpay <payment_request> [description]
+    """
+    try:
+        # Parse command
+        parts = message.split()
+        if len(parts) < 2:
+            return """⚡ Lightning Payment Command
+
+**Usage:** `/lightningpay <payment_request> [description]`
+
+**Examples:**
+• `/lightningpay lnbc1000u1p...` - Pay Lightning invoice
+• `/lightningpay lnbc5000u1p... Coffee payment` - Pay with description
+
+**How to Get Payment Request:**
+1. Ask sender to create Lightning invoice
+2. Copy the payment request (starts with 'lnbc')
+3. Use this command to pay
+
+**Lightning Benefits:**
+⚡ Instant Bitcoin payments
+⚡ Low fees
+⚡ Scalable network"""
+        
+        payment_request = parts[1]
+        description = " ".join(parts[2:]) if len(parts) > 2 else f"Lightning payment from {user.phone_number}"
+        
+        # Validate payment request format
+        if not payment_request.startswith('lnbc'):
+            return "❌ Invalid payment request. Must start with 'lnbc'"
+        
+        # Pay Lightning invoice
+        payment_service = PaymentService()
+        payment = payment_service.pay_lightning_invoice(user, payment_request, description)
+        
+        return f"""⚡ Lightning Payment Successful!
+
+**Amount:** {payment.amount_sats:,} sats ({payment.amount_btc:.8f} BTC)
+**Naira Value:** ₦{payment.amount_ngn:,.2f}
+**Description:** {description}
+
+**Payment Details:**
+• Payment ID: `{payment.payment_id}`
+• Status: {payment.status.title()}
+• Completed: {payment.completed_at.strftime('%Y-%m-%d %H:%M:%S')} UTC
+
+**Transaction Hash:**
+`{payment.payment_hash}`
+
+**Lightning Benefits:**
+⚡ Instant confirmation
+⚡ Micro-fee payment
+⚡ Scalable Bitcoin network
+
+Your Lightning payment is complete! 🚀"""
+        
+    except ValueError as e:
+        if "Insufficient Bitcoin balance" in str(e):
+            return f"""❌ Insufficient Bitcoin Balance
+
+You don't have enough Bitcoin to complete this Lightning payment.
+
+**Your Balance:** Check with `/balance`
+**Required:** {payment.amount_btc:.8f} BTC
+
+**To Add Bitcoin:**
+• `/deposit <amount>` - Deposit Naira to get Bitcoin
+• `/receive` - Get Bitcoin address for deposits
+
+Lightning payments require Bitcoin in your wallet! 💰"""
+        return f"❌ Error: {str(e)}"
+    except Exception as e:
+        logger.error(f"Error processing Lightning payment: {str(e)}")
+        return f"❌ Error processing Lightning payment: {str(e)}"
+
+
+def handle_lightning_status_command(user: BitzappUser, message: str) -> str:
+    """
+    Handle /lightningstatus command to check Lightning invoice status
+    Usage: /lightningstatus <invoice_id>
+    """
+    try:
+        # Parse command
+        parts = message.split()
+        if len(parts) < 2:
+            return """⚡ Lightning Status Command
+
+**Usage:** `/lightningstatus <invoice_id>`
+
+**Examples:**
+• `/lightningstatus 123e4567-e89b-12d3-a456-426614174000`
+
+**How to Get Invoice ID:**
+1. Create Lightning invoice with `/lightning`
+2. Copy the Invoice ID from the response
+3. Use this command to check status
+
+**Status Types:**
+• Pending - Waiting for payment
+• Paid - Payment received
+• Expired - Invoice expired
+• Cancelled - Invoice cancelled"""
+        
+        invoice_id = parts[1]
+        
+        # Get Lightning invoice
+        from payments.models import LightningInvoice
+        try:
+            invoice = LightningInvoice.objects.get(invoice_id=invoice_id, user=user)
+        except LightningInvoice.DoesNotExist:
+            return f"❌ Lightning invoice not found: {invoice_id}"
+        
+        # Check status
+        payment_service = PaymentService()
+        status_info = payment_service.get_lightning_invoice_status(invoice)
+        
+        return f"""⚡ Lightning Invoice Status
+
+**Invoice ID:** `{invoice.invoice_id}`
+**Amount:** {invoice.amount_sats:,} sats ({invoice.amount_btc:.8f} BTC)
+**Naira Value:** ₦{invoice.amount_ngn:,.2f}
+**Description:** {invoice.description}
+
+**Status:** {status_info['status'].title()}
+**Created:** {invoice.created_at.strftime('%Y-%m-%d %H:%M:%S')} UTC
+**Expires:** {invoice.expires_at.strftime('%Y-%m-%d %H:%M:%S')} UTC
+
+**Payment Request:**
+`{invoice.payment_request}`
+
+**Status Details:**
+• Current Status: {status_info['status'].title()}
+• Paid At: {status_info['paid_at'] or 'Not paid yet'}
+• Amount: {status_info['amount_sats']:,} sats
+
+**Lightning Network:**
+⚡ Instant Bitcoin payments
+⚡ Low fees
+⚡ Scalable network"""
+        
+    except Exception as e:
+        logger.error(f"Error checking Lightning status: {str(e)}")
+        return f"❌ Error checking Lightning status: {str(e)}"
+
+
+def handle_lightning_history_command(user: BitzappUser) -> str:
+    """
+    Handle /lightninghistory command to show Lightning payment history
+    """
+    try:
+        payment_service = PaymentService()
+        history = payment_service.get_lightning_payment_history(user, limit=10)
+        
+        if not history:
+            return """⚡ Lightning Payment History
+
+**No Lightning transactions found.**
+
+**Get Started with Lightning:**
+• `/lightning <amount>` - Create Lightning invoice
+• `/lightningpay <payment_request>` - Pay Lightning invoice
+• `/lightningstatus <invoice_id>` - Check invoice status
+
+**Lightning Benefits:**
+⚡ Instant Bitcoin payments
+⚡ Low fees
+⚡ Scalable network
+⚡ Perfect for small payments"""
+        
+        response = "⚡ Lightning Payment History\n\n"
+        
+        for i, transaction in enumerate(history, 1):
+            transaction_type = "📤 Invoice" if transaction['type'] == 'lightning_invoice' else "📥 Payment"
+            status_emoji = "✅" if transaction['status'] == 'completed' or transaction['status'] == 'paid' else "⏳"
+            
+            response += f"""**{i}. {transaction_type}** {status_emoji}
+**Amount:** {transaction['amount_sats']:,} sats ({transaction['amount_btc']:.8f} BTC)
+**Naira:** ₦{transaction['amount_ngn']:,.2f}
+**Status:** {transaction['status'].title()}
+**Date:** {transaction['created_at'][:19].replace('T', ' ')}
+**Request:** `{transaction['payment_request']}`
+
+"""
+        
+        response += """**Lightning Network Benefits:**
+⚡ Instant Bitcoin payments
+⚡ Low fees (micro-fees)
+⚡ Scalable Bitcoin network
+⚡ Perfect for small payments
+
+**Commands:**
+• `/lightning <amount>` - Create invoice
+• `/lightningpay <request>` - Pay invoice
+• `/lightningstatus <id>` - Check status"""
+        
+        return response
+        
+    except Exception as e:
+        logger.error(f"Error getting Lightning history: {str(e)}")
+        return f"❌ Error getting Lightning history: {str(e)}"
+
+
 def handle_help_command() -> str:
     """
     Handle /help command
     """
     return """🤖 Bitzapp Bitcoin Wallet Commands
 
-**Wallet Management:**
+**🔐 Wallet Management:**
 • /create - Create non-custodial wallet (you control keys)
 • /import <seed phrase> - Import existing wallet
 • /wallet - Learn about wallet types
 • /balance - Check your Bitcoin balance
 
-**Transactions:**
+**⚡ Lightning Network:**
+• /lightning <amount_sats> - Create Lightning invoice
+• /lightningpay <payment_request> - Pay Lightning invoice
+• /lightningstatus <invoice_id> - Check invoice status
+• /lightninghistory - View Lightning transactions
+
+**💰 Bitcoin Operations:**
 • /send <amount> <address> - Send Bitcoin (custodial)
 • /send <amount> <address> <seed phrase> - Send Bitcoin (non-custodial)
 • /receive - Get your Bitcoin address
 • /deposit <amount> - Deposit Naira to convert to Bitcoin
 • /withdraw <amount> <account> <bank> <name> - Withdraw Bitcoin to Nigerian bank
 
-**Payment Commands:**
+**💳 Bill Payments:**
 • /paybill <provider> <amount> - Pay bills with Bitcoin
 
-**Information Commands:**
+**🤖 AI Assistant:**
 • /ask <question> - Ask AI assistant anything
 • /help - Show this help message
+
+**⚡ Lightning Benefits:**
+• Instant Bitcoin payments
+• Low fees (micro-fees)
+• Scalable Bitcoin network
+• Perfect for small payments
 
 **Wallet Types:**
 🔐 **Non-Custodial** - You control your private keys (maximum security)
 🏦 **Custodial** - We manage your private keys (easy to use)
 
-**AI Assistant:**
-Just type your question and I'll help you!
+**Examples:**
+• /create - Create new non-custodial wallet
+• /lightning 1000 - Create 1000 sats Lightning invoice
+• /lightningpay lnbc1000u1p... - Pay Lightning invoice
+• /deposit 50000 - Deposit ₦50,000
+• /paybill mtn 1000 08012345678 - Pay MTN airtime
 
-**Security Tips:**
-• Never share your seed phrase
-• Always verify addresses before sending
-• Start with small amounts for new addresses
-• Keep your seed phrase safe - we cannot recover it
+**Security Reminder:**
+🔐 Save your seed phrase safely!
+🔐 Never share your private keys
+🔐 Use Lightning for instant payments
 
-Welcome to Bitzapp - Your Bitcoin wallet in WhatsApp! 🚀"""
+**Need Help?** Ask me anything with /ask <question>"""
 
 
 def handle_withdraw_command(user: BitzappUser, message: str) -> str:

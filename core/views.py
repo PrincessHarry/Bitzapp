@@ -15,7 +15,9 @@ from .command_handlers import (
     handle_create_wallet_command, handle_import_wallet_command, handle_wallet_info_command,
     handle_deposit_command, handle_balance_command, handle_send_command,
     handle_receive_command, handle_paybill_command, handle_withdraw_command,
-    handle_ask_command, handle_help_command, handle_unknown_command, handle_ai_chat
+    handle_ask_command, handle_help_command, handle_unknown_command, handle_ai_chat,
+    handle_lightning_invoice_command, handle_lightning_pay_command, 
+    handle_lightning_status_command, handle_lightning_history_command
 )
 
 logger = logging.getLogger('bitzapp')
@@ -187,6 +189,14 @@ def process_command(user: BitzappUser, message: str) -> str:
             return handle_paybill_command(user, message)
         elif message.startswith('/withdraw'):
             return handle_withdraw_command(user, message)
+        elif message.startswith('/lightning '):
+            return handle_lightning_invoice_command(user, message)
+        elif message.startswith('/lightningpay '):
+            return handle_lightning_pay_command(user, message)
+        elif message.startswith('/lightningstatus '):
+            return handle_lightning_status_command(user, message)
+        elif message.startswith('/lightninghistory'):
+            return handle_lightning_history_command(user)
         elif message.startswith('/ask'):
             return handle_ask_command(user, message)
         elif message.startswith('/help'):
