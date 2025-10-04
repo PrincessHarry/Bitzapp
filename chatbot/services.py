@@ -55,17 +55,28 @@ class AIChatbotService:
         """
         Get welcome message for new chat sessions
         """
-        return """🤖 Welcome to Bitzapp AI Assistant!
+        return """🚀 Welcome to Bitzapp - Your Bitcoin Wallet in WhatsApp!
 
-I'm here to help you with:
+I'm your AI assistant here to help you with Bitcoin and Bitzapp features.
+
+**To Get Started:**
+Type `/create` to create your Bitcoin wallet and begin your journey!
+
+**What I can help you with:**
 • Bitcoin basics and education
-• Bitzapp features and commands
+• Creating and managing your wallet
+• Sending and receiving Bitcoin
+• Paying bills with Bitcoin
 • Security tips and best practices
-• Troubleshooting issues
+
+**Quick Commands:**
+• `/create` - Create your Bitcoin wallet
+• `/help` - See all available commands
+• `/balance` - Check your Bitcoin balance
 
 Just ask me anything about Bitcoin or Bitzapp! 
 
-Type /help to see available commands."""
+Ready to start? Type `/create` to create your wallet! 🚀"""
     
     def get_chat_response(self, user: BitzappUser, message: str) -> str:
         """
@@ -301,6 +312,11 @@ Stay safe and secure! 🛡️"""
         Generate AI response using Gemini API
         """
         try:
+            # Check if it's a greeting first
+            greeting_response = self._handle_greeting(message, user)
+            if greeting_response:
+                return greeting_response
+            
             if not self.gemini_api_key:
                 return self._get_fallback_response(message)
             
@@ -353,6 +369,7 @@ Your role:
 - Explain Bitzapp features and commands
 - Provide security tips and best practices
 - Troubleshoot user issues
+- Guide new users to create their wallet with /create command
 - Be friendly, helpful, and educational
 
 Context about Bitzapp:
@@ -361,6 +378,9 @@ Context about Bitzapp:
 - Users can deposit Naira and convert to Bitcoin
 - Users can pay bills using Bitcoin
 - It's designed for Nigerian users
+- New users should type /create to create their wallet
+
+Important: If a user seems new or confused, always guide them to type /create to get started with their Bitcoin wallet.
 
 Keep responses concise, helpful, and focused on Bitcoin/Bitzapp topics."""
         
@@ -420,6 +440,74 @@ Keep responses concise, helpful, and focused on Bitcoin/Bitzapp topics."""
             logger.error(f"Error calling Gemini API: {str(e)}")
             return self._get_fallback_response("")
     
+    def _handle_greeting(self, message: str, user: BitzappUser) -> str:
+        """
+        Handle greeting messages and guide users to create wallet
+        """
+        try:
+            message_lower = message.lower().strip()
+            
+            # Common greeting patterns
+            greetings = [
+                'hi', 'hello', 'hey', 'good morning', 'good afternoon', 'good evening',
+                'hi bitzapp', 'hello bitzapp', 'hey bitzapp', 'hi there', 'hello there',
+                'start', 'begin', 'get started', 'new user', 'first time'
+            ]
+            
+            # Check if message contains greeting
+            is_greeting = any(greeting in message_lower for greeting in greetings)
+            
+            if is_greeting:
+                # Check if user has a wallet
+                from core.models import BitcoinWallet
+                try:
+                    wallet = BitcoinWallet.objects.get(user=user)
+                    # User has wallet, provide helpful response
+                    return f"""👋 Hello! Great to see you again!
+
+I see you already have a Bitcoin wallet set up. How can I help you today?
+
+**Quick Actions:**
+• `/balance` - Check your Bitcoin balance
+• `/send` - Send Bitcoin to someone
+• `/receive` - Get your Bitcoin address
+• `/deposit` - Add Naira to convert to Bitcoin
+• `/help` - See all commands
+
+**Ask me anything about:**
+• Bitcoin and cryptocurrency
+• Using your wallet
+• Security tips
+• Bitzapp features
+
+What would you like to do? 🚀"""
+                except BitcoinWallet.DoesNotExist:
+                    # User doesn't have wallet, guide them to create one
+                    return f"""👋 Hello! Welcome to Bitzapp! 
+
+I'm excited to help you get started with Bitcoin! 
+
+**To begin your Bitcoin journey:**
+Type `/create` to create your Bitcoin wallet and start using Bitcoin right here in WhatsApp!
+
+**What you'll get:**
+🔐 Your own Bitcoin wallet
+💰 Ability to send and receive Bitcoin
+💳 Pay bills with Bitcoin
+🏦 Convert Naira to Bitcoin
+⚡ Lightning-fast payments
+
+**Ready to start?**
+Type `/create` to create your wallet now! 🚀
+
+**Need help?** Just ask me anything about Bitcoin!"""
+            
+            return None  # Not a greeting, continue with normal AI processing
+            
+        except Exception as e:
+            logger.error(f"Error handling greeting: {str(e)}")
+            return None
+    
     def _get_fallback_response(self, message: str) -> str:
         """
         Get fallback response when AI is unavailable
@@ -435,23 +523,25 @@ Keep responses concise, helpful, and focused on Bitcoin/Bitzapp topics."""
 • You can send it to anyone, anywhere
 • It's a great store of value
 
-**Bitzapp Commands:**
-• /balance - Check your balance
-• /send - Send Bitcoin
-• /receive - Get your address
-• /deposit - Add Naira to convert to Bitcoin
+**Get Started with Bitzapp:**
+• `/create` - Create your Bitcoin wallet
+• `/balance` - Check your balance
+• `/send` - Send Bitcoin
+• `/receive` - Get your address
+• `/deposit` - Add Naira to convert to Bitcoin
 
-Try again in a moment, or use the commands above! 🚀"""
+**Ready to start?** Type `/create` to create your wallet! 🚀"""
         
         return """I'm having some technical difficulties right now, but I'm here to help!
 
-**Quick Help:**
-• Type /help for available commands
-• Type /balance to check your wallet
-• Type /bitcoin for Bitcoin basics
-• Type /security for safety tips
+**Quick Start Guide:**
+• Type `/create` to create your Bitcoin wallet
+• Type `/help` for available commands
+• Type `/balance` to check your wallet
+• Type `/bitcoin` for Bitcoin basics
+• Type `/security` for safety tips
 
-I'll be back to full AI mode soon! 🤖"""
+**New to Bitcoin?** Type `/create` to get started! 🚀"""
     
     def get_chat_history(self, user: BitzappUser, limit: int = 20) -> list:
         """
