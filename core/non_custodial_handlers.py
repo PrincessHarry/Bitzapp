@@ -21,9 +21,9 @@ def handle_create_wallet_command(user: BitzappUser) -> str:
         
         return f"""🔐 Non-Custodial Wallet Created!
 
-**⚠️ CRITICAL WARNING: SAVE THIS SEED PHRASE SAFELY! ⚠️**
+* CRITICAL WARNING: SAVE THIS SEED PHRASE SAFELY! *
 
-**Your 12-Word Seed Phrase:**
+*Your 12-Word Seed Phrase:*
 `{result['seed_phrase']}`
 
 **Your Bitcoin Address:**
