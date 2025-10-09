@@ -30,7 +30,6 @@ MANIFEST
 # Django
 *.log
 local_settings.py
-db.sqlite3
 db.sqlite3-journal
 media/
 staticfiles/
@@ -109,4 +108,3 @@ bash.exe.stackdump
 # Documentation: ignore all markdown except README.md
 *.md
 !README.md
-db.sqlite3
