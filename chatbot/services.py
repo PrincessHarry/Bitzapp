@@ -11,6 +11,7 @@ from core.models import BitzappUser
 from chatbot.models import ChatSession, ChatMessage, AIKnowledge
 from chatbot.intent_classifier import IntentClassifier
 from payments.bitnob_service import BitnobService
+from typing import Dict, Any
 
 logger = logging.getLogger('bitzapp')
 
