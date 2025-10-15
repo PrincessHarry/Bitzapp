@@ -22,47 +22,47 @@ def handle_create_wallet_command(user: BitzappUser) -> str:
         result = wallet_service._create_non_custodial_wallet(user)
         
         if result['seed_phrase'] == 'EXISTING_WALLET':
-            return f"""🔐 Non-Custodial Wallet Already Exists!
+            return f"""Wallet Already Exists
 
-**Your Bitcoin Address:**
-`{result['bitcoin_address']}`
+Your Bitcoin Address:
+{result['bitcoin_address']}
 
-**Wallet Status:** ✅ Active Non-Custodial Wallet
+Wallet Status: Active
 
-**Security Reminder:**
-🔐 You already control your private keys
-🔐 We never store your seed phrase
-🔐 Your wallet is truly decentralized
+Security Reminder:
+- You control your private keys
+- We never store your seed phrase
+- Your wallet is secure and decentralized
 
-**Commands:**
-• /balance - Check your balance
-• /send - Send Bitcoin (requires seed phrase)
-• /receive - Get your Bitcoin address
+Commands:
+- /balance - Check your balance
+- /send - Send Bitcoin (requires seed phrase)
+- /receive - Get your Bitcoin address
 
-Your non-custodial wallet is ready to use! 🚀"""
+Your wallet is ready to use."""
         
-        return f"""🔐 Non-Custodial Wallet Created!
+        return f"""Wallet Created Successfully
 
-**⚠️ CRITICAL WARNING: SAVE THIS SEED PHRASE SAFELY! ⚠️**
+CRITICAL WARNING: SAVE THIS SEED PHRASE SAFELY
 
-**Your 12-Word Seed Phrase:**
-`{result['seed_phrase']}`
+Your 12-Word Seed Phrase:
+{result['seed_phrase']}
 
-**Your Bitcoin Address:**
-`{result['bitcoin_address']}`
+Your Bitcoin Address:
+{result['bitcoin_address']}
 
-**IMPORTANT SECURITY NOTES:**
-🚨 We DO NOT store your seed phrase
-🚨 If you lose it, your Bitcoin is GONE FOREVER
-🚨 Never share your seed phrase with anyone
-🚨 Write it down on paper and store safely
-🚨 Take a photo and store in encrypted backup
+IMPORTANT SECURITY NOTES:
+- We DO NOT store your seed phrase
+- If you lose it, your Bitcoin is GONE FOREVER
+- Never share your seed phrase with anyone
+- Write it down on paper and store safely
+- Take a photo and store in encrypted backup
 
-**Why Non-Custodial?**
-✅ You control your private keys
-✅ We cannot access your Bitcoin
-✅ Decentralized and secure
-✅ No single point of failure
+Why This Is Secure:
+- You control your private keys
+- We cannot access your Bitcoin
+- Decentralized and secure
+- No single point of failure
 
 To use your wallet, you'll need to provide your seed phrase for transactions.
 
@@ -102,19 +102,19 @@ This will import your existing Bitcoin wallet into Bitzapp."""
         wallet_service = BitcoinWalletService()
         result = wallet_service.import_wallet_from_seed(user, seed_phrase)
         
-        return f"""✅ Wallet Imported Successfully!
+        return f"""Wallet Imported Successfully
 
-**Your Bitcoin Address:**
-`{result['bitcoin_address']}`
+Your Bitcoin Address:
+{result['bitcoin_address']}
 
-**Current Balance:** {result['balance']:.8f} BTC
+Current Balance: {result['balance']:.8f} BTC
 
-**Security Reminder:**
-🔐 Your seed phrase is safe with you
-🔐 We never store your private keys
-🔐 Delete the message containing your seed phrase
+Security Reminder:
+- Your seed phrase is safe with you
+- We never store your private keys
+- Delete the message containing your seed phrase
 
-Your non-custodial wallet is now active! Use /balance to check your funds."""
+Your wallet is now active! Use /balance to check your funds."""
         
     except ValueError as e:
         return f"❌ Invalid seed phrase: {str(e)}"
@@ -127,31 +127,29 @@ def handle_wallet_info_command() -> str:
     """
     Handle /wallet command to explain wallet types
     """
-    return """🔐 Wallet Types Explained
+    return """Bitcoin Wallet Information
 
-**Custodial Wallet (Easy Mode):**
-• We manage your private keys
-• Easy to use, no seed phrases
-• Good for beginners
-• Small amounts
+Your Bitzapp wallet is a secure Bitcoin wallet where you control your private keys.
 
-**Non-Custodial Wallet (Secure Mode):**
-• YOU control your private keys
-• Requires seed phrase management
-• Maximum security
-• True decentralization
+Key Features:
+- You control your private keys
+- Maximum security and privacy
+- Decentralized and secure
+- No single point of failure
 
-**Commands:**
-• /create - Create non-custodial wallet
-• /import <seed phrase> - Import existing wallet
-• /balance - Check your balance
-• /send - Send Bitcoin (requires seed phrase for non-custodial)
+Commands:
+- /create - Create your wallet
+- /import <seed phrase> - Import existing wallet
+- /balance - Check your balance
+- /send - Send Bitcoin (requires seed phrase)
 
-**Choose Your Security Level:**
-🔐 Non-custodial = Maximum security, you control everything
-🏦 Custodial = Easy to use, we help manage your keys
+Security Benefits:
+- You own your Bitcoin completely
+- We cannot access your funds
+- Your seed phrase is your backup
+- True financial sovereignty
 
-Ready to create your wallet? Type /create for non-custodial!"""
+Ready to create your wallet? Type /create to get started."""
 
 
 def handle_deposit_command(user: BitzappUser, message: str) -> str:
@@ -162,7 +160,7 @@ def handle_deposit_command(user: BitzappUser, message: str) -> str:
         # Extract amount from message
         amount_match = re.search(r'(\d+(?:\.\d+)?)', message)
         if not amount_match:
-            return """💰 Deposit Naira to Convert to Bitcoin
+            return """ Deposit Naira to Convert to Bitcoin
 
 **Usage:** /deposit <amount>
 **Example:** /deposit 50000
@@ -189,7 +187,7 @@ Send the exact amount and we'll process it within 24 hours! 🚀"""
         payment_service = PaymentService()
         deposit = payment_service.create_naira_deposit(user, amount)
         
-        return f"""💰 Deposit Request Created
+        return f""" Deposit Request Created
 
 **Amount:** ₦{amount:,.2f}
 **Bitcoin Equivalent:** {deposit.amount_btc:.8f} BTC
@@ -222,45 +220,45 @@ def handle_balance_command(user: BitzappUser) -> str:
         try:
             wallet = BitcoinWallet.objects.get(user=user)
         except BitcoinWallet.DoesNotExist:
-            return """❓ No Wallet Found
+            return """No Wallet Found
 
 You don't have a wallet yet. Choose an option:
 
-**Create Non-Custodial Wallet:**
+Create Non-Custodial Wallet:
 /create - Generate new wallet with seed phrase
 
-**Import Existing Wallet:**
+Import Existing Wallet:
 /import <12-word seed phrase>
 
-Both options create a wallet where YOU control your private keys! 🔐"""
+Both options create a wallet where YOU control your private keys."""
         
         wallet_service = BitcoinWalletService()
         balance = wallet_service.get_wallet_balance(user)
         
-        wallet_type = "🔐 Non-Custodial" if wallet.is_non_custodial else "🏦 Custodial"
-        security_status = "You control your private keys" if wallet.is_non_custodial else "We manage your private keys"
+        wallet_type = "Secure Wallet"
+        security_status = "You control your private keys"
         
-        return f"""💰 Your Bitcoin Wallet Balance
+        return f"""Your Bitcoin Wallet Balance
 
-**Bitcoin:** {balance['balance_btc']:.8f} BTC
-**Naira Value:** ₦{balance['balance_ngn']:,.2f}
-**Exchange Rate:** 1 BTC = ₦{balance['exchange_rate']:,.2f}
+Bitcoin: {balance['balance_btc']:.8f} BTC
+Naira Value: ₦{balance['balance_ngn']:,.2f}
+Exchange Rate: 1 BTC = ₦{balance['exchange_rate']:,.2f}
 
-**Your Bitcoin Address:**
-`{balance['bitcoin_address']}`
+Your Bitcoin Address:
+{balance['bitcoin_address']}
 
-**Wallet Type:** {wallet_type}
-**Security:** {security_status}
+Wallet Type: {wallet_type}
+Security: {security_status}
 
-**Recent Transactions:**
+Recent Transactions:
 {get_recent_transactions(user)}
 
-**Commands:**
-• /send - Send Bitcoin {'(requires seed phrase)' if wallet.is_non_custodial else ''}
-• /receive - Get your Bitcoin address
-• /deposit - Add Naira to convert to Bitcoin
+Commands:
+- /send - Send Bitcoin (requires seed phrase)
+- /receive - Get your Bitcoin address
+- /deposit - Add Naira to convert to Bitcoin
 
-Use your Bitcoin address to receive Bitcoin from others! 🚀"""
+Use your Bitcoin address to receive Bitcoin from others."""
         
     except Exception as e:
         logger.error(f"Error handling balance command: {str(e)}")
@@ -400,26 +398,26 @@ def handle_receive_command(user: BitzappUser) -> str:
         wallet_service = BitcoinWalletService()
         balance = wallet_service.get_wallet_balance(user)
         
-        return f"""📥 Receive Bitcoin
+        return f"""Receive Bitcoin
 
-**Your Bitcoin Address:**
-`{balance['bitcoin_address']}`
+Your Bitcoin Address:
+{balance['bitcoin_address']}
 
-**How to receive Bitcoin:**
+How to receive Bitcoin:
 1. Share this address with the sender
 2. They send Bitcoin to this address
 3. You'll receive it in your wallet
 4. Check balance with /balance
 
-**Current Balance:** {balance['balance_btc']:.8f} BTC (₦{balance['balance_ngn']:,.2f})
+Current Balance: {balance['balance_btc']:.8f} BTC (₦{balance['balance_ngn']:,.2f})
 
-**Security Tips:**
-• This address is unique to you
-• You can use it multiple times
-• Always verify the address before sharing
-• Never share your private keys
+Security Tips:
+- This address is unique to you
+- You can use it multiple times
+- Always verify the address before sharing
+- Never share your private keys
 
-Share this address to receive Bitcoin! 🚀"""
+Share this address to receive Bitcoin."""
         
     except Exception as e:
         logger.error(f"Error handling receive command: {str(e)}")
@@ -822,57 +820,57 @@ def handle_help_command() -> str:
     """
     Handle /help command
     """
-    return """🤖 Bitzapp Bitcoin Wallet Commands
+    return """Bitzapp Bitcoin Wallet Commands
 
-**🔐 Wallet Management:**
-• /create - Create non-custodial wallet (you control keys)
-• /import <seed phrase> - Import existing wallet
-• /wallet - Learn about wallet types
-• /balance - Check your Bitcoin balance
+Wallet Management:
+- /create - Create your wallet (you control keys)
+- /import <seed phrase> - Import existing wallet
+- /wallet - Learn about wallet features
+- /balance - Check your Bitcoin balance
 
-**⚡ Lightning Network:**
-• /lightning <amount_sats> - Create Lightning invoice
-• /lightningpay <payment_request> - Pay Lightning invoice
-• /lightningstatus <invoice_id> - Check invoice status
-• /lightninghistory - View Lightning transactions
+Lightning Network:
+- /lightning <amount_sats> - Create Lightning invoice
+- /lightningpay <payment_request> - Pay Lightning invoice
+- /lightningstatus <invoice_id> - Check invoice status
+- /lightninghistory - View Lightning transactions
 
-**💰 Bitcoin Operations:**
-• /send <amount> <address> - Send Bitcoin (custodial)
-• /send <amount> <address> <seed phrase> - Send Bitcoin (non-custodial)
-• /receive - Get your Bitcoin address
-• /deposit <amount> - Deposit Naira to convert to Bitcoin
-• /withdraw <amount> <account> <bank> <name> - Withdraw Bitcoin to Nigerian bank
+Bitcoin Operations:
+- /send <amount> <address> <seed phrase> - Send Bitcoin
+- /receive - Get your Bitcoin address
+- /deposit <amount> - Deposit Naira to convert to Bitcoin
+- /withdraw <amount> <account> <bank> <name> - Withdraw Bitcoin to Nigerian bank
 
-**💳 Bill Payments:**
-• /paybill <provider> <amount> - Pay bills with Bitcoin
+Bill Payments:
+- /paybill <provider> <amount> - Pay bills with Bitcoin
 
-**🤖 AI Assistant:**
-• /ask <question> - Ask AI assistant anything
-• /help - Show this help message
+AI Assistant:
+- /ask <question> - Ask AI assistant anything
+- /help - Show this help message
 
-**⚡ Lightning Benefits:**
-• Instant Bitcoin payments
-• Low fees (micro-fees)
-• Scalable Bitcoin network
-• Perfect for small payments
+Lightning Benefits:
+- Instant Bitcoin payments
+- Low fees (micro-fees)
+- Scalable Bitcoin network
+- Perfect for small payments
 
-**Wallet Types:**
-🔐 **Non-Custodial** - You control your private keys (maximum security)
-🏦 **Custodial** - We manage your private keys (easy to use)
+Wallet Features:
+- You control your private keys (maximum security)
+- Secure and decentralized
+- No third-party access to your funds
 
-**Examples:**
-• /create - Create new non-custodial wallet
-• /lightning 1000 - Create 1000 sats Lightning invoice
-• /lightningpay lnbc1000u1p... - Pay Lightning invoice
-• /deposit 50000 - Deposit ₦50,000
-• /paybill mtn 1000 08012345678 - Pay MTN airtime
+Examples:
+- /create - Create your wallet
+- /lightning 1000 - Create 1000 sats Lightning invoice
+- /lightningpay lnbc1000u1p... - Pay Lightning invoice
+- /deposit 50000 - Deposit ₦50,000
+- /paybill mtn 1000 08012345678 - Pay MTN airtime
 
-**Security Reminder:**
-🔐 Save your seed phrase safely!
-🔐 Never share your private keys
-🔐 Use Lightning for instant payments
+Security Reminder:
+- Save your seed phrase safely
+- Never share your private keys
+- Use Lightning for instant payments
 
-**Need Help?** Ask me anything with /ask <question>"""
+Need Help? Ask me anything with /ask <question>"""
 
 
 def handle_withdraw_command(user: BitzappUser, message: str) -> str:
@@ -998,17 +996,17 @@ def handle_unknown_command() -> str:
     """
     Handle unknown commands
     """
-    return """❓ Unknown Command
+    return """Unknown Command
 
 Type /help to see all available commands.
 
-**Quick Start:**
-• /balance - Check your wallet
-• /deposit 50000 - Add Naira
-• /receive - Get your Bitcoin address
-• /ask What is Bitcoin? - Ask AI assistant
+Quick Start:
+- /balance - Check your wallet
+- /deposit 50000 - Add Naira
+- /receive - Get your Bitcoin address
+- /ask What is Bitcoin? - Ask AI assistant
 
-Need help? Just type /help! 🚀"""
+Need help? Just type /help."""
 
 
 def handle_ai_chat(user: BitzappUser, message: str) -> str:

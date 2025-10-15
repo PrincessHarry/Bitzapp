@@ -5,9 +5,12 @@ Handles conversations with users about Bitcoin and Bitzapp features
 import requests
 import logging
 import time
+import json
 from django.conf import settings
 from core.models import BitzappUser
 from chatbot.models import ChatSession, ChatMessage, AIKnowledge
+from chatbot.intent_classifier import IntentClassifier
+from payments.bitnob_service import BitnobService
 
 logger = logging.getLogger('bitzapp')
 
@@ -20,6 +23,8 @@ class AIChatbotService:
     def __init__(self):
         self.gemini_api_key = getattr(settings, 'GEMINI_API_KEY', '')
         self.gemini_base_url = 'https://generativelanguage.googleapis.com/v1beta'
+        self.intent_classifier = IntentClassifier()
+        self.bitnob_service = BitnobService()
     
     def start_chat_session(self, user: BitzappUser) -> ChatSession:
         """
@@ -55,32 +60,32 @@ class AIChatbotService:
         """
         Get welcome message for new chat sessions
         """
-        return """🚀 Welcome to Bitzapp - Your Bitcoin Wallet in WhatsApp!
+        return """Welcome to Bitzapp - Your Bitcoin Wallet in WhatsApp
 
-I'm your AI assistant here to help you with Bitcoin and Bitzapp features.
+I'm your assistant here to help you with Bitcoin and Bitzapp features.
 
-**To Get Started:**
-Type `/create` to create your Bitcoin wallet and begin your journey!
+To Get Started:
+Type /create to create your Bitcoin wallet and begin your journey.
 
-**What I can help you with:**
-• Bitcoin basics and education
-• Creating and managing your wallet
-• Sending and receiving Bitcoin
-• Paying bills with Bitcoin
-• Security tips and best practices
+What I can help you with:
+- Bitcoin basics and education
+- Creating and managing your wallet
+- Sending and receiving Bitcoin
+- Paying bills with Bitcoin
+- Security tips and best practices
 
-**Quick Commands:**
-• `/create` - Create your Bitcoin wallet
-• `/help` - See all available commands
-• `/balance` - Check your Bitcoin balance
+Quick Commands:
+- /create - Create your Bitcoin wallet
+- /help - See all available commands
+- /balance - Check your Bitcoin balance
 
-Just ask me anything about Bitcoin or Bitzapp! 
+Just ask me anything about Bitcoin or Bitzapp.
 
-Ready to start? Type `/create` to create your wallet! 🚀"""
+Ready to start? Type /create to create your wallet."""
     
     def get_chat_response(self, user: BitzappUser, message: str) -> str:
         """
-        Get AI response to user message
+        Get AI response to user message using intent classification
         """
         try:
             start_time = time.time()
@@ -95,12 +100,15 @@ Ready to start? Type `/create` to create your wallet! 🚀"""
                 content=message
             )
             
-            # Check if it's a command
-            if message.startswith('/'):
-                response = self._handle_command(user, message)
+            # Classify user intent
+            intent_data = self.intent_classifier.classify_intent(message)
+            
+            # Handle financial intents
+            if intent_data["intent"] != "chat":
+                response = self._handle_financial_intent(user, intent_data)
             else:
-                # Generate AI response
-                response = self._generate_ai_response(user, message, session)
+                # Handle conversational chat
+                response = self._handle_chat_intent(user, message, session)
             
             # Calculate response time
             response_time = time.time() - start_time
@@ -307,33 +315,6 @@ Want to learn more? Just ask! 🚀"""
 
 Stay safe and secure! 🛡️"""
     
-    def _generate_ai_response(self, user: BitzappUser, message: str, session: ChatSession) -> str:
-        """
-        Generate AI response using Gemini API
-        """
-        try:
-            # Check if it's a greeting first
-            greeting_response = self._handle_greeting(message, user)
-            if greeting_response:
-                return greeting_response
-            
-            if not self.gemini_api_key:
-                return self._get_fallback_response(message)
-            
-            # Get conversation history
-            conversation_history = self._get_conversation_history(session)
-            
-            # Prepare prompt
-            prompt = self._build_prompt(message, conversation_history)
-            
-            # Call Gemini API
-            response = self._call_gemini_api(prompt)
-            
-            return response
-            
-        except Exception as e:
-            logger.error(f"Error generating AI response: {str(e)}")
-            return self._get_fallback_response(message)
     
     def _get_conversation_history(self, session: ChatSession, limit: int = 10) -> list:
         """
@@ -358,87 +339,155 @@ Stay safe and secure! 🛡️"""
             logger.error(f"Error getting conversation history: {str(e)}")
             return []
     
-    def _build_prompt(self, message: str, history: list) -> str:
-        """
-        Build prompt for Gemini API
-        """
-        system_prompt = """You are Bitzapp AI Assistant, a helpful AI that specializes in Bitcoin and the Bitzapp WhatsApp Bitcoin wallet.
-
-Your role:
-- Help users understand Bitcoin and cryptocurrency
-- Explain Bitzapp features and commands
-- Provide security tips and best practices
-- Troubleshoot user issues
-- Guide new users to create their wallet with /create command
-- Be friendly, helpful, and educational
-
-Context about Bitzapp:
-- It's a Bitcoin wallet inside WhatsApp
-- Users can send/receive Bitcoin via WhatsApp
-- Users can deposit Naira and convert to Bitcoin
-- Users can pay bills using Bitcoin
-- It's designed for Nigerian users
-- New users should type /create to create their wallet
-
-Important: If a user seems new or confused, always guide them to type /create to get started with their Bitcoin wallet.
-
-Keep responses concise, helpful, and focused on Bitcoin/Bitzapp topics."""
-        
-        # Build conversation context
-        context = system_prompt + "\n\nConversation:\n"
-        for msg in history:
-            context += f"{msg['role']}: {msg['content']}\n"
-        
-        context += f"user: {message}\nassistant:"
-        
-        return context
     
-    def _call_gemini_api(self, prompt: str) -> str:
+    def _handle_financial_intent(self, user: BitzappUser, intent_data: Dict[str, Any]) -> str:
         """
-        Call Gemini API for AI response
+        Handle financial intents using Bitnob API
         """
         try:
-            url = f"{self.gemini_base_url}/models/gemini-pro:generateContent"
+            intent = intent_data["intent"]
+            user_phone = user.phone_number
             
-            headers = {
-                'Content-Type': 'application/json',
-            }
-            
-            params = {
-                'key': self.gemini_api_key
-            }
-            
-            data = {
-                "contents": [{
-                    "parts": [{
-                        "text": prompt
-                    }]
-                }]
-            }
-            
-            response = requests.post(
-                url,
-                headers=headers,
-                params=params,
-                json=data,
-                timeout=30
-            )
-            
-            if response.status_code == 200:
-                result = response.json()
-                if 'candidates' in result and len(result['candidates']) > 0:
-                    content = result['candidates'][0]['content']['parts'][0]['text']
-                    return content.strip()
+            if intent == "create_wallet":
+                result = self.bitnob_service.create_wallet(user_phone)
+                if result["success"]:
+                    return f"""Wallet Created Successfully
+
+Your Bitcoin Address:
+{result['bitcoin_address']}
+
+Your wallet is now ready to use. You can:
+- Deposit Naira to get Bitcoin
+- Send Bitcoin to others
+- Receive Bitcoin from others
+- Withdraw to your bank account
+
+Type /help to see all available commands."""
                 else:
-                    logger.error("No candidates in Gemini response")
-                    return self._get_fallback_response("")
+                    return f"Sorry, I couldn't create your wallet. {result.get('error', 'Please try again.')}"
+            
+            elif intent == "balance":
+                result = self.bitnob_service.get_wallet_balance(user_phone)
+                if result["success"]:
+                    return f"""Your Bitcoin Wallet Balance
+
+Bitcoin: {result['balance_btc']:.8f} BTC
+Bitcoin Address: {result['bitcoin_address']}
+
+Commands:
+- /deposit <amount> - Add Naira to get Bitcoin
+- /send <amount> <address> - Send Bitcoin
+- /receive - Get your Bitcoin address
+- /withdraw <amount> - Withdraw to bank account"""
+                else:
+                    return f"Sorry, I couldn't get your balance. {result.get('error', 'Please try again.')}"
+            
+            elif intent == "deposit":
+                amount = intent_data.get("amount", 0)
+                if amount > 0:
+                    result = self.bitnob_service.deposit_naira(user_phone, amount)
+                    if result["success"]:
+                        return f"""Deposit Request Created
+
+Amount: ₦{amount:,.2f}
+Bitcoin Equivalent: {result['amount_btc']:.8f} BTC
+Exchange Rate: 1 BTC = ₦{result['exchange_rate']:,.2f}
+
+Your Bitcoin will be added to your wallet once payment is confirmed."""
+                    else:
+                        return f"Sorry, I couldn't process your deposit. {result.get('error', 'Please try again.')}"
+                else:
+                    return "Please specify an amount to deposit. Example: 'Deposit ₦5000' or '/deposit 5000'"
+            
+            elif intent == "send":
+                amount = intent_data.get("amount", 0)
+                receiver = intent_data.get("receiver", "")
+                if amount > 0 and receiver:
+                    # For now, assume receiver is a Bitcoin address
+                    result = self.bitnob_service.send_bitcoin(user_phone, receiver, amount, f"Sent to {receiver}")
+                    if result["success"]:
+                        return f"""Bitcoin Sent Successfully
+
+Amount: {amount:.8f} BTC
+To: {receiver}
+Transaction ID: {result['transaction_id']}
+
+Your Bitcoin is being transferred. Confirmation in ~10-60 minutes."""
+                    else:
+                        return f"Sorry, I couldn't send Bitcoin. {result.get('error', 'Please try again.')}"
+                else:
+                    return "Please specify amount and recipient. Example: 'Send ₦2000 worth of BTC to Mary'"
+            
+            elif intent == "withdraw":
+                amount = intent_data.get("amount", 0)
+                if amount > 0:
+                    # This would need bank details from user
+                    return f"""Withdrawal Request
+
+Amount: ₦{amount:,.2f}
+
+To complete withdrawal, please provide:
+- Bank name
+- Account number
+- Account name
+
+Example: 'Withdraw ₦10000 to GTB 0123456789 John Doe'"""
+                else:
+                    return "Please specify an amount to withdraw. Example: 'Withdraw ₦10000'"
+            
+            elif intent == "receive":
+                result = self.bitnob_service.get_wallet_balance(user_phone)
+                if result["success"]:
+                    return f"""Receive Bitcoin
+
+Your Bitcoin Address:
+{result['bitcoin_address']}
+
+Share this address with the sender to receive Bitcoin.
+
+Current Balance: {result['balance_btc']:.8f} BTC"""
+                else:
+                    return "Sorry, I couldn't get your Bitcoin address. Please try again."
+            
+            elif intent == "transactions":
+                result = self.bitnob_service.get_transaction_history(user_phone)
+                if result["success"]:
+                    transactions = result["transactions"]
+                    if transactions:
+                        response = "Recent Transactions:\n\n"
+                        for tx in transactions[:5]:  # Show last 5 transactions
+                            response += f"• {tx.get('type', 'Transaction')}: {tx.get('amount', 0)} BTC\n"
+                        return response
+                    else:
+                        return "No transactions found. Start by depositing some Naira to get Bitcoin!"
+                else:
+                    return f"Sorry, I couldn't get your transaction history. {result.get('error', 'Please try again.')}"
+            
             else:
-                logger.error(f"Gemini API error: {response.status_code}")
-                return self._get_fallback_response("")
+                return "I understand you want to perform a financial action, but I need more details. Please try again or type /help for commands."
                 
         except Exception as e:
-            logger.error(f"Error calling Gemini API: {str(e)}")
-            return self._get_fallback_response("")
+            logger.error(f"Error handling financial intent: {str(e)}")
+            return "Sorry, I encountered an error processing your request. Please try again."
+    
+    def _handle_chat_intent(self, user: BitzappUser, message: str, session: ChatSession) -> str:
+        """
+        Handle conversational chat intents
+        """
+        try:
+            # Check if it's a greeting first
+            greeting_response = self._handle_greeting(message, user)
+            if greeting_response:
+                return greeting_response
+            
+            # Generate conversational response
+            response = self.intent_classifier.generate_chat_response(message)
+            return response
+            
+        except Exception as e:
+            logger.error(f"Error handling chat intent: {str(e)}")
+            return "I'm here to help with your Bitcoin wallet! You can create a wallet, deposit Naira, send Bitcoin, or ask me about Bitcoin basics."
+    
     
     def _handle_greeting(self, message: str, user: BitzappUser) -> str:
         """
@@ -463,44 +512,44 @@ Keep responses concise, helpful, and focused on Bitcoin/Bitzapp topics."""
                 try:
                     wallet = BitcoinWallet.objects.get(user=user)
                     # User has wallet, provide helpful response
-                    return f"""👋 Hello! Great to see you again!
+                    return f"""Hello! Great to see you again.
 
 I see you already have a Bitcoin wallet set up. How can I help you today?
 
-**Quick Actions:**
-• `/balance` - Check your Bitcoin balance
-• `/send` - Send Bitcoin to someone
-• `/receive` - Get your Bitcoin address
-• `/deposit` - Add Naira to convert to Bitcoin
-• `/help` - See all commands
+Quick Actions:
+- /balance - Check your Bitcoin balance
+- /send - Send Bitcoin to someone
+- /receive - Get your Bitcoin address
+- /deposit - Add Naira to convert to Bitcoin
+- /help - See all commands
 
-**Ask me anything about:**
-• Bitcoin and cryptocurrency
-• Using your wallet
-• Security tips
-• Bitzapp features
+Ask me anything about:
+- Bitcoin and cryptocurrency
+- Using your wallet
+- Security tips
+- Bitzapp features
 
-What would you like to do? 🚀"""
+What would you like to do?"""
                 except BitcoinWallet.DoesNotExist:
                     # User doesn't have wallet, guide them to create one
-                    return f"""👋 Hello! Welcome to Bitzapp! 
+                    return f"""Hello! Welcome to Bitzapp.
 
-I'm excited to help you get started with Bitcoin! 
+I'm excited to help you get started with Bitcoin.
 
-**To begin your Bitcoin journey:**
-Type `/create` to create your Bitcoin wallet and start using Bitcoin right here in WhatsApp!
+To begin your Bitcoin journey:
+Type /create to create your Bitcoin wallet and start using Bitcoin right here in WhatsApp.
 
-**What you'll get:**
-🔐 Your own Bitcoin wallet
-💰 Ability to send and receive Bitcoin
-💳 Pay bills with Bitcoin
-🏦 Convert Naira to Bitcoin
-⚡ Lightning-fast payments
+What you'll get:
+- Your own Bitcoin wallet
+- Ability to send and receive Bitcoin
+- Pay bills with Bitcoin
+- Convert Naira to Bitcoin
+- Lightning-fast payments
 
-**Ready to start?**
-Type `/create` to create your wallet now! 🚀
+Ready to start?
+Type /create to create your wallet now.
 
-**Need help?** Just ask me anything about Bitcoin!"""
+Need help? Just ask me anything about Bitcoin."""
             
             return None  # Not a greeting, continue with normal AI processing
             
@@ -515,33 +564,33 @@ Type `/create` to create your wallet now! 🚀
         # Check if message contains Bitcoin-related keywords
         bitcoin_keywords = ['bitcoin', 'btc', 'crypto', 'wallet', 'blockchain']
         if any(keyword in message.lower() for keyword in bitcoin_keywords):
-            return """I'm having trouble connecting to my AI brain right now, but I can still help with Bitcoin basics!
+            return """I'm having trouble connecting to my AI brain right now, but I can still help with Bitcoin basics.
 
-**Bitcoin Quick Facts:**
-• Bitcoin is digital money that works without banks
-• It's secure, fast, and global
-• You can send it to anyone, anywhere
-• It's a great store of value
+Bitcoin Quick Facts:
+- Bitcoin is digital money that works without banks
+- It's secure, fast, and global
+- You can send it to anyone, anywhere
+- It's a great store of value
 
-**Get Started with Bitzapp:**
-• `/create` - Create your Bitcoin wallet
-• `/balance` - Check your balance
-• `/send` - Send Bitcoin
-• `/receive` - Get your address
-• `/deposit` - Add Naira to convert to Bitcoin
+Get Started with Bitzapp:
+- /create - Create your Bitcoin wallet
+- /balance - Check your balance
+- /send - Send Bitcoin
+- /receive - Get your address
+- /deposit - Add Naira to convert to Bitcoin
 
-**Ready to start?** Type `/create` to create your wallet! 🚀"""
+Ready to start? Type /create to create your wallet."""
         
-        return """I'm having some technical difficulties right now, but I'm here to help!
+        return """I'm having some technical difficulties right now, but I'm here to help.
 
-**Quick Start Guide:**
-• Type `/create` to create your Bitcoin wallet
-• Type `/help` for available commands
-• Type `/balance` to check your wallet
-• Type `/bitcoin` for Bitcoin basics
-• Type `/security` for safety tips
+Quick Start Guide:
+- Type /create to create your Bitcoin wallet
+- Type /help for available commands
+- Type /balance to check your wallet
+- Type /bitcoin for Bitcoin basics
+- Type /security for safety tips
 
-**New to Bitcoin?** Type `/create` to get started! 🚀"""
+New to Bitcoin? Type /create to get started."""
     
     def get_chat_history(self, user: BitzappUser, limit: int = 20) -> list:
         """
