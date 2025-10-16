@@ -61,28 +61,35 @@ class AIChatbotService:
         """
         Get welcome message for new chat sessions
         """
-        return """Welcome to Bitzapp - Your Bitcoin Wallet in WhatsApp
+        return """⚡ Welcome to Bitzapp - Your Lightning Wallet in WhatsApp
 
-I'm your assistant here to help you with Bitcoin and Bitzapp features.
+I'm your assistant here to help you with Lightning Network and Bitcoin payments.
 
 To Get Started:
-Type /create to create your Bitcoin wallet and begin your journey.
+Type /create to create your Lightning wallet and begin your journey.
 
 What I can help you with:
-- Bitcoin basics and education
-- Creating and managing your wallet
-- Sending and receiving Bitcoin
-- Paying bills with Bitcoin
-- Security tips and best practices
+- Lightning Network basics and education
+- Creating and managing your Lightning wallet
+- Sending and receiving Lightning payments
+- Paying bills with Lightning Bitcoin
+- Lightning addresses and LNURL
 
 Quick Commands:
-- /create - Create your Bitcoin wallet
+- /create - Create your Lightning wallet
 - /help - See all available commands
-- /balance - Check your Bitcoin balance
+- /balance - Check your Lightning balance
+- /receive - Get your Lightning address
 
-Just ask me anything about Bitcoin or Bitzapp.
+Lightning Network Benefits:
+⚡ Instant payments
+⚡ Low fees (micro-fees)
+⚡ No complex key management
+⚡ Perfect for everyday use
 
-Ready to start? Type /create to create your wallet."""
+Just ask me anything about Lightning Network or Bitzapp.
+
+Ready to start? Type /create to create your Lightning wallet! 🚀"""
     
     def get_chat_response(self, user: BitzappUser, message: str) -> str:
         """
@@ -245,76 +252,88 @@ Just ask me anything about Bitcoin or Bitzapp! 🤖"""
     
     def _get_bitcoin_info(self) -> str:
         """
-        Get Bitcoin basics information
+        Get Lightning Network basics information
         """
-        return """₿ Bitcoin Basics
+        return """⚡ Lightning Network Basics
 
-**What is Bitcoin?**
-Bitcoin is a decentralized digital currency that allows peer-to-peer transactions without intermediaries like banks.
+**What is Lightning Network?**
+Lightning Network is a second-layer solution for Bitcoin that enables instant, low-fee payments. It's built on top of Bitcoin's security.
 
 **Key Features:**
-• Decentralized - No central authority
-• Secure - Cryptographically protected
-• Transparent - All transactions are public
-• Limited Supply - Only 21 million Bitcoin will ever exist
+• Instant payments - No waiting for confirmations
+• Low fees - Micro-fees for transactions
+• Scalable - Handles millions of transactions
+• Secure - Built on Bitcoin's security
 
-**How Bitcoin Works:**
-1. Transactions are recorded on a public ledger (blockchain)
-2. Miners verify and secure transactions
-3. You control your Bitcoin with private keys
-4. No one can freeze or confiscate your Bitcoin
+**How Lightning Works:**
+1. Payments happen off-chain through payment channels
+2. Instant settlement between parties
+3. Final settlement on Bitcoin blockchain
+4. No need to manage complex private keys
 
-**Bitcoin in Nigeria:**
-• Store of value against inflation
-• Fast international transfers
-• Lower fees than traditional banking
-• Financial freedom and control
+**Lightning in Nigeria:**
+• Perfect for daily transactions
+• Low fees for small payments
+• Instant transfers to anyone
+• Easy to use with Lightning addresses
 
-**Security Tips:**
-• Never share your private keys
-• Use hardware wallets for large amounts
-• Verify addresses before sending
-• Keep your seed phrase safe
+**Lightning Addresses:**
+• Look like email addresses: username@bitzapp-i3i3.onrender.com
+• Much easier than Bitcoin addresses
+• Can receive payments multiple times
+• No need to generate new addresses
+
+**Security Benefits:**
+• No seed phrase management needed
+• Instant payments reduce risk
+• Built on Bitcoin's security
+• Easy to use safely
 
 Want to learn more? Just ask! 🚀"""
     
     def _get_security_tips(self) -> str:
         """
-        Get security tips for Bitcoin users
+        Get security tips for Lightning Network users
         """
-        return """🔒 Bitcoin Security Tips
+        return """⚡ Lightning Network Security Tips
 
-**Protect Your Private Keys:**
-• Never share your private keys or seed phrase
-• Store them offline and secure
-• Use hardware wallets for large amounts
-• Don't store keys on your phone or computer
+**Lightning Address Security:**
+• Your Lightning address is like an email address
+• Share it freely - it's designed to be public
+• No private keys to manage or lose
+• Much safer than traditional Bitcoin wallets
 
 **Safe Practices:**
-• Always verify addresses before sending
-• Use small amounts for testing
-• Keep your Bitcoin in multiple wallets
-• Regularly update your wallet software
+• Always verify Lightning addresses before sending
+• Start with small amounts for new addresses
+• Use Lightning for daily transactions
+• Keep larger amounts in secure storage
 
 **Avoid Scams:**
-• Never send Bitcoin to "recover" your account
+• Never send Lightning Bitcoin to "recover" your account
 • Be wary of "free Bitcoin" offers
 • Don't trust random links or messages
 • Verify information from official sources
 
-**Bitzapp Security:**
-• Your Bitcoin is stored securely
-• We never have access to your private keys
+**Bitzapp Lightning Security:**
+• Your Lightning Bitcoin is stored securely
 • All transactions are encrypted
 • We use industry-standard security practices
+• Lightning Network provides additional security layers
 
-**If You're Compromised:**
-• Immediately transfer your Bitcoin to a new wallet
-• Change all passwords
-• Report the incident
-• Learn from the experience
+**Lightning Benefits:**
+• Instant payments reduce exposure time
+• No seed phrase to lose or compromise
+• Built on Bitcoin's security
+• Easy to use safely
 
-Stay safe and secure! 🛡️"""
+**Best Practices:**
+• Use Lightning for everyday transactions
+• Keep your phone secure
+• Don't share your WhatsApp with others
+• Use strong passwords for your accounts
+
+Lightning Network makes Bitcoin safer and easier to use! 🛡️"""
     
     
     def _get_conversation_history(self, session: ChatSession, limit: int = 10) -> list:

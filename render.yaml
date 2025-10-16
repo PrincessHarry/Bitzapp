@@ -1,0 +1,41 @@
+# Render.com deployment configuration for Bitzapp
+# This file configures your Render service for Lightning Address support
+
+services:
+  - type: web
+    name: bitzapp
+    env: python
+    plan: starter
+    buildCommand: pip install -r requirements.txt && python manage.py migrate
+    startCommand: gunicorn bitzapp.wsgi
+    envVars:
+      - key: DJANGO_SETTINGS_MODULE
+        value: bitzapp.settings
+      - key: ALLOWED_HOSTS
+        value: bitzapp-i3i3.onrender.com
+      - key: DEBUG
+        value: false
+      - key: SECRET_KEY
+        generateValue: true
+      - key: BITNOB_API_KEY
+        sync: false  # Set this in Render dashboard
+      - key: BITNOB_BASE_URL
+        value: https://api.bitnob.co
+      - key: GEMINI_API_KEY
+        sync: false  # Set this in Render dashboard
+      - key: WHATSAPP_ACCESS_TOKEN
+        sync: false  # Set this in Render dashboard
+      - key: WHATSAPP_VERIFY_TOKEN
+        sync: false  # Set this in Render dashboard
+
+# Custom domain configuration
+# After deployment, add your custom domain in Render dashboard:
+# 1. Go to your service settings
+# 2. Add custom domain: bitzapp-i3i3.onrender.com
+# 3. Render will automatically provision SSL certificate
+
+# Environment variables to set in Render dashboard:
+# - BITNOB_API_KEY: Your Bitnob API key
+# - GEMINI_API_KEY: Your Google Gemini API key  
+# - WHATSAPP_ACCESS_TOKEN: Your WhatsApp Business API token
+# - WHATSAPP_VERIFY_TOKEN: Your WhatsApp webhook verify token

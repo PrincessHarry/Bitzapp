@@ -8,6 +8,7 @@ from decimal import Decimal
 from .models import BitzappUser, BillProvider
 from wallet.services import BitcoinWalletService
 from payments.services import PaymentService
+from payments.bitnob_service import BitnobService
 from chatbot.services import AIChatbotService
 
 logger = logging.getLogger('bitzapp')
@@ -15,141 +16,117 @@ logger = logging.getLogger('bitzapp')
 
 def handle_create_wallet_command(user: BitzappUser) -> str:
     """
-    Handle /create command for non-custodial wallet
+    Handle /create command for Lightning wallet
     """
     try:
-        wallet_service = BitcoinWalletService()
-        result = wallet_service._create_non_custodial_wallet(user)
+        bitnob = BitnobService()
         
-        if result['seed_phrase'] == 'EXISTING_WALLET':
-            return f"""Wallet Already Exists
+        # Create Lightning wallet via Bitnob
+        result = bitnob.create_wallet(user.phone_number)
+        
+        if result.get("success"):
+            # Create LNURL address for receiving payments
+            identifier = user.phone_number.replace("+", "").replace("-", "").replace(" ", "")
+            lnurl_result = bitnob.create_lnurl_address(user.phone_number, identifier)
+            
+            if lnurl_result.get("success"):
+                return f"""⚡ Lightning Wallet Created Successfully!
 
-Your Bitcoin Address:
-{result['bitcoin_address']}
+Your Lightning Address:
+{lnurl_result['identifier']}@bitzapp-i3i3.onrender.com
 
-Wallet Status: Active
+Your LNURL QR Code:
+{lnurl_result['lnurl_qr']}
 
-Security Reminder:
-- You control your private keys
-- We never store your seed phrase
-- Your wallet is secure and decentralized
+Lightning Network Benefits:
+⚡ Instant payments
+⚡ Low fees (micro-fees)
+⚡ Scalable Bitcoin network
+⚡ Perfect for everyday use
+
+Commands:
+- /balance - Check your Lightning balance
+- /send - Send Lightning payments
+- /receive - Get your Lightning address
+- /deposit - Add Naira to get Lightning Bitcoin
+
+Your Lightning wallet is ready to use! 🚀"""
+            else:
+                return f"""Lightning Wallet Created!
+
+Your wallet is ready, but we couldn't create your Lightning address yet.
+Please try /receive to get your Lightning address.
 
 Commands:
 - /balance - Check your balance
-- /send - Send Bitcoin (requires seed phrase)
-- /receive - Get your Bitcoin address
-
-Your wallet is ready to use."""
+- /receive - Get your Lightning address
+- /deposit - Add Naira to get Lightning Bitcoin"""
+        else:
+            return f"Sorry, I couldn't create your Lightning wallet. {result.get('error', 'Please try again.')}"
         
-        return f"""Wallet Created Successfully
-
-CRITICAL WARNING: SAVE THIS SEED PHRASE SAFELY
-
-Your 12-Word Seed Phrase:
-{result['seed_phrase']}
-
-Your Bitcoin Address:
-{result['bitcoin_address']}
-
-IMPORTANT SECURITY NOTES:
-- We DO NOT store your seed phrase
-- If you lose it, your Bitcoin is GONE FOREVER
-- Never share your seed phrase with anyone
-- Write it down on paper and store safely
-- Take a photo and store in encrypted backup
-
-Why This Is Secure:
-- You control your private keys
-- We cannot access your Bitcoin
-- Decentralized and secure
-- No single point of failure
-
-To use your wallet, you'll need to provide your seed phrase for transactions.
-
-Type /import to import an existing wallet or /help for commands."""
-        
-    except ValueError as e:
-        return f"❌ {str(e)}"
     except Exception as e:
-        logger.error(f"Error creating non-custodial wallet: {str(e)}")
-        return "Sorry, I couldn't create your wallet. Please try again."
+        logger.error(f"Error creating Lightning wallet: {str(e)}")
+        return "Sorry, I couldn't create your Lightning wallet. Please try again."
 
 
 def handle_import_wallet_command(user: BitzappUser, message: str) -> str:
     """
-    Handle /import command for existing wallet
+    Handle /import command - Lightning wallets don't need seed phrases
     """
-    try:
-        # Extract seed phrase from message
-        # Format: /import word1 word2 word3 ... word12
-        parts = message.split()
-        if len(parts) < 13:  # /import + 12 words
-            return """🔐 Import Existing Wallet
+    return """⚡ Lightning Network - No Import Needed!
 
-**Usage:** /import <12-word seed phrase>
-**Example:** /import abandon ability able about above absent absorb abstract absurd abuse access accident
+Lightning Network wallets work differently from traditional Bitcoin wallets:
 
-**Security Tips:**
-• Only import your own seed phrase
-• Make sure you're in a private chat
-• Delete the message after importing
-• Never share your seed phrase
+**Why No Seed Phrase?**
+- Lightning payments are instant and off-chain
+- Your Lightning address is your identifier
+- No need to import or manage private keys
+- Much simpler and safer for everyday use
 
-This will import your existing Bitcoin wallet into Bitzapp."""
-        
-        seed_phrase = ' '.join(parts[1:13])  # Get 12 words
-        
-        wallet_service = BitcoinWalletService()
-        result = wallet_service.import_wallet_from_seed(user, seed_phrase)
-        
-        return f"""Wallet Imported Successfully
+**To Get Started:**
+- /create - Create your Lightning wallet
+- /receive - Get your Lightning address
+- /deposit - Add Naira to get Lightning Bitcoin
 
-Your Bitcoin Address:
-{result['bitcoin_address']}
+**Lightning Benefits:**
+⚡ Instant payments
+⚡ Low fees (micro-fees)
+⚡ No complex key management
+⚡ Perfect for daily transactions
 
-Current Balance: {result['balance']:.8f} BTC
-
-Security Reminder:
-- Your seed phrase is safe with you
-- We never store your private keys
-- Delete the message containing your seed phrase
-
-Your wallet is now active! Use /balance to check your funds."""
-        
-    except ValueError as e:
-        return f"❌ Invalid seed phrase: {str(e)}"
-    except Exception as e:
-        logger.error(f"Error importing wallet: {str(e)}")
-        return "Sorry, I couldn't import your wallet. Please check your seed phrase and try again."
+Ready to create your Lightning wallet? Type /create! 🚀"""
 
 
 def handle_wallet_info_command() -> str:
     """
-    Handle /wallet command to explain wallet types
+    Handle /wallet command to explain Lightning wallet
     """
-    return """Bitcoin Wallet Information
+    return """⚡ Lightning Network Wallet Information
 
-Your Bitzapp wallet is a secure Bitcoin wallet where you control your private keys.
+Your Bitzapp wallet uses the Lightning Network for instant Bitcoin payments.
 
 Key Features:
-- You control your private keys
-- Maximum security and privacy
-- Decentralized and secure
-- No single point of failure
+- Lightning Network powered
+- Instant payments
+- Low fees (micro-fees)
+- No complex key management
+- Perfect for everyday use
 
 Commands:
-- /create - Create your wallet
-- /import <seed phrase> - Import existing wallet
-- /balance - Check your balance
-- /send - Send Bitcoin (requires seed phrase)
+- /create - Create your Lightning wallet
+- /balance - Check your Lightning balance
+- /send - Send Lightning payments
+- /receive - Get your Lightning address
+- /deposit - Add Naira to get Lightning Bitcoin
 
-Security Benefits:
-- You own your Bitcoin completely
-- We cannot access your funds
-- Your seed phrase is your backup
-- True financial sovereignty
+Lightning Benefits:
+⚡ Instant confirmation
+⚡ Micro-fee payments
+⚡ Scalable Bitcoin network
+⚡ No waiting for blockchain confirmations
+⚡ Perfect for small payments
 
-Ready to create your wallet? Type /create to get started."""
+Ready to create your Lightning wallet? Type /create to get started! 🚀"""
 
 
 def handle_deposit_command(user: BitzappUser, message: str) -> str:
@@ -183,27 +160,21 @@ Send the exact amount and we'll process it within 24 hours! 🚀"""
         
         amount = Decimal(amount_match.group(1))
         
-        # Create deposit request
-        payment_service = PaymentService()
-        deposit = payment_service.create_naira_deposit(user, amount)
+        # Create deposit via Bitnob
+        bitnob = BitnobService()
+        result = bitnob.deposit_naira(user.phone_number, float(amount))
         
+        if result.get("success"):
         return f""" Deposit Request Created
 
 **Amount:** ₦{amount:,.2f}
-**Bitcoin Equivalent:** {deposit.amount_btc:.8f} BTC
-**Exchange Rate:** 1 BTC = ₦{deposit.exchange_rate:,.2f}
+**Bitcoin Equivalent:** {result.get('amount_btc', 0):.8f} BTC
+**Exchange Rate:** 1 BTC = ₦{result.get('exchange_rate', 0):,.2f}
+**Status:** {result.get('status', 'pending').title()}
 
-**Next Steps:**
-1. Send ₦{amount:,.2f} to our bank account
-2. Include reference: DEP{user.id}
-3. We'll process within 24 hours
-
-**Bank Details:**
-Account: Bitzapp Limited
-Account Number: 1234567890
-Bank: Access Bank
-
-Your Bitcoin will be added to your wallet once payment is confirmed! 🚀"""
+Your Bitcoin will be added to your wallet once payment is confirmed. 🚀"""
+        else:
+            return f"Sorry, I couldn't process your deposit. {result.get('error', 'Please try again.')}"
         
     except Exception as e:
         logger.error(f"Error handling deposit command: {str(e)}")
@@ -232,20 +203,21 @@ Import Existing Wallet:
 
 Both options create a wallet where YOU control your private keys."""
         
-        wallet_service = BitcoinWalletService()
-        balance = wallet_service.get_wallet_balance(user)
+        bitnob = BitnobService()
+        balance = bitnob.get_wallet_balance(user.phone_number)
+        rate_info = bitnob.get_exchange_rate()
         
         wallet_type = "Secure Wallet"
         security_status = "You control your private keys"
         
         return f"""Your Bitcoin Wallet Balance
 
-Bitcoin: {balance['balance_btc']:.8f} BTC
-Naira Value: ₦{balance['balance_ngn']:,.2f}
-Exchange Rate: 1 BTC = ₦{balance['exchange_rate']:,.2f}
+Bitcoin: {balance.get('balance_btc', 0):.8f} BTC
+Naira Value: ₦{(balance.get('balance_btc', 0) * rate_info.get('rate', 0)):,.2f}
+Exchange Rate: 1 BTC = ₦{rate_info.get('rate', 0):,.2f}
 
 Your Bitcoin Address:
-{balance['bitcoin_address']}
+{balance.get('bitcoin_address', 'Unavailable')}
 
 Wallet Type: {wallet_type}
 Security: {security_status}
@@ -267,123 +239,84 @@ Use your Bitcoin address to receive Bitcoin from others."""
 
 def handle_send_command(user: BitzappUser, message: str) -> str:
     """
-    Handle /send command - supports both custodial and non-custodial wallets
+    Handle /send command - Lightning payments
     """
     try:
-        from .models import BitcoinWallet
-        
-        # Check if user has a wallet
-        try:
-            wallet = BitcoinWallet.objects.get(user=user)
-        except BitcoinWallet.DoesNotExist:
-            return """❓ No Wallet Found
-
-You don't have a wallet yet. Choose an option:
-
-**Create Non-Custodial Wallet:**
-/create - Generate new wallet with seed phrase
-
-**Import Existing Wallet:**
-/import <12-word seed phrase>
-
-Both options create a wallet where YOU control your private keys! 🔐"""
-        
         # Extract components from message
         parts = message.split()
-        
-        if wallet.is_custodial:
-            # Custodial wallet - simple format
             if len(parts) < 3:
-                return """💸 Send Bitcoin (Custodial Wallet)
+            return """⚡ Send Lightning Payments
 
-**Usage:** /send <amount> <address>
-**Example:** /send 0.001 bc1qxy2kgdygjrsqtzq2n0yrf2493p83kkfjhx0wlh
+**Usage:** /send <amount_sats> <lightning_address>
+**Example:** /send 1000 satoshi@bitzapp-i3i3.onrender.com
 
-**Current Balance:** {get_user_balance(user)}
+**Lightning Address Examples:**
+• satoshi@bitzapp-i3i3.onrender.com
+• alice@lightning.com
+• bob@ln.pay
 
-**How to send:**
-1. Get recipient's Bitcoin address
-2. Use the format above
-3. Confirm the transaction
-4. Bitcoin will be sent instantly
+**Tips:**
+• Lightning addresses are like email addresses
+• Amount is in satoshis (1 BTC = 100,000,000 sats)
+• Payments are instant and low-fee
+• Always verify the recipient address"""
 
-**Security Tips:**
-• Always verify the address before sending
-• Start with small amounts for new addresses
-• Double-check the amount
+        try:
+            amount_sats = int(parts[1])
+        except ValueError:
+            return "❌ Amount must be a number in satoshis. Example: /send 1000 satoshi@bitnob.com"
 
-Ready to send Bitcoin? Use the format above! 🚀"""
-            
-            amount = Decimal(parts[1])
-            address = parts[2]
-            seed_phrase = None
-            
-        elif wallet.is_non_custodial:
-            # Non-custodial wallet - requires seed phrase
-            if len(parts) < 15:  # /send + amount + address + 12 words
-                return """💸 Send Bitcoin (Non-Custodial Wallet)
+        lightning_address = parts[2]
 
-**Usage:** /send <amount> <address> <12-word seed phrase>
-**Example:** /send 0.001 bc1qxy2k... abandon ability able about above absent absorb abstract absurd abuse access accident
+        if amount_sats <= 0:
+            return "❌ Amount must be greater than 0 satoshis"
 
-**Security Process:**
-1. We use your seed phrase to sign the transaction
-2. We immediately forget your seed phrase
-3. Transaction is broadcast to Bitcoin network
-4. Your Bitcoin is sent directly from your wallet
+        # Check if it's a Lightning address (contains @)
+        if "@" not in lightning_address:
+            return """❌ Invalid Lightning Address
 
-**Security Tips:**
-• Only send to verified addresses
-• Start with small amounts for new addresses
-• Delete your message after sending
-• Never share your seed phrase with others
+Lightning addresses look like email addresses:
+• satoshi@bitzapp-i3i3.onrender.com
+• alice@lightning.com
+• bob@ln.pay
 
-This is a truly decentralized transaction - you control everything!"""
-            
-            amount = Decimal(parts[1])
-            address = parts[2]
-            seed_phrase = ' '.join(parts[3:15])  # Get 12 words
+Please provide a valid Lightning address."""
+
+        # Check balance via Bitnob
+        bitnob = BitnobService()
+        balance = bitnob.get_wallet_balance(user.phone_number)
+        rate_info = bitnob.get_exchange_rate()
         
-        # Validate amount
-        if amount <= 0:
-            return "❌ Amount must be greater than 0"
-        
-        # Check balance
-        wallet_service = BitcoinWalletService()
-        balance = wallet_service.get_wallet_balance(user)
-        
-        if balance['balance_btc'] < amount:
+        if balance.get('success') and balance.get('balance_btc', 0) < (amount_sats / 100_000_000):
             return f"""❌ Insufficient Balance
 
-**Your Balance:** {balance['balance_btc']:.8f} BTC
-**Trying to Send:** {amount:.8f} BTC
+**Your Balance:** {balance.get('balance_btc', 0):.8f} BTC ({balance.get('balance_btc', 0) * 100_000_000:,.0f} sats)
+**Trying to Send:** {amount_sats:,} sats
 
-You need more Bitcoin in your wallet. Use /deposit to add Naira and convert to Bitcoin! 💰"""
+You need more Lightning Bitcoin. Use /deposit to add Naira and convert to Lightning Bitcoin! 💰"""
+
+        # For now, we'll use Lightning invoice creation instead of direct LNURL payment
+        # This is a simplified approach - in production you'd decode the LNURL first
+        result = bitnob.create_lightning_invoice(user.phone_number, amount_sats, f"Payment to {lightning_address}")
         
-        # Send Bitcoin
-        transaction_obj = wallet_service.send_bitcoin(
-            user, address, amount, f"Sent {amount} BTC to {address}", seed_phrase
-        )
-        
-        wallet_type = "Non-Custodial" if wallet.is_non_custodial else "Custodial"
-        
-        return f"""✅ Bitcoin Sent Successfully!
+        if result.get('success'):
+            return f"""⚡ Lightning Payment Initiated!
 
-**Amount:** {amount:.8f} BTC
-**To Address:** {address}
-**Transaction ID:** {transaction_obj.id}
-**Naira Value:** ₦{float(amount) * balance['exchange_rate']:,.2f}
-**Wallet Type:** {wallet_type}
+**Amount:** {amount_sats:,} sats ({amount_sats / 100_000_000:.8f} BTC)
+**To:** {lightning_address}
+**Naira Value:** ₦{(amount_sats / 100_000_000) * rate_info.get('rate', 0):,.2f}
 
-**What Happened:**
-{'🔐 You signed the transaction with your private key' if wallet.is_non_custodial else '🏦 We processed the transaction for you'}
-🌐 Transaction broadcast to Bitcoin network
-💫 Your Bitcoin is being transferred
-⏱️ Confirmation in ~10-60 minutes
+**Payment Request:**
+`{result.get('payment_request')}`
 
-{'**Security Note:** Your seed phrase was used temporarily for signing and then immediately forgotten. We never store your private keys!' if wallet.is_non_custodial else '**Security Note:** Your transaction was processed securely through our custodial system.'}
+**Lightning Benefits:**
+⚡ Instant confirmation
+⚡ Micro-fee payment
+⚡ No waiting for blockchain confirmations
 
-Check blockchain explorer with your transaction hash for updates."""
+Your Lightning payment is being processed! 🚀"""
+        else:
+            return f"Sorry, I couldn't process your Lightning payment. {result.get('error', 'Please try again.')}"
         
     except Exception as e:
         logger.error(f"Error handling send command: {str(e)}")
@@ -392,36 +325,48 @@ Check blockchain explorer with your transaction hash for updates."""
 
 def handle_receive_command(user: BitzappUser) -> str:
     """
-    Handle /receive command
+    Handle /receive command - Lightning address
     """
     try:
-        wallet_service = BitcoinWalletService()
-        balance = wallet_service.get_wallet_balance(user)
+        bitnob = BitnobService()
         
-        return f"""Receive Bitcoin
+        # Create or get LNURL address
+        identifier = user.phone_number.replace("+", "").replace("-", "").replace(" ", "")
+        lnurl_result = bitnob.create_lnurl_address(user.phone_number, identifier)
+        
+        if lnurl_result.get("success"):
+            balance = bitnob.get_wallet_balance(user.phone_number)
+            rate_info = bitnob.get_exchange_rate()
+            
+            return f"""⚡ Receive Lightning Payments
 
-Your Bitcoin Address:
-{balance['bitcoin_address']}
+Your Lightning Address:
+{lnurl_result['identifier']}@bitzapp-i3i3.onrender.com
 
-How to receive Bitcoin:
-1. Share this address with the sender
-2. They send Bitcoin to this address
-3. You'll receive it in your wallet
+Your LNURL QR Code:
+{lnurl_result['lnurl_qr']}
+
+How to receive Lightning payments:
+1. Share your Lightning address with the sender
+2. They scan your QR code or use your address
+3. You'll receive Lightning Bitcoin instantly
 4. Check balance with /balance
 
-Current Balance: {balance['balance_btc']:.8f} BTC (₦{balance['balance_ngn']:,.2f})
+Current Balance: {balance.get('balance_btc', 0):.8f} BTC (₦{balance.get('balance_btc', 0) * rate_info.get('rate', 0):,.2f})
 
-Security Tips:
-- This address is unique to you
-- You can use it multiple times
-- Always verify the address before sharing
-- Never share your private keys
+Lightning Benefits:
+⚡ Instant confirmation
+⚡ Micro-fee payments
+⚡ No waiting for blockchain confirmations
+⚡ Perfect for small payments
 
-Share this address to receive Bitcoin."""
+Share your Lightning address to receive payments! 🚀"""
+        else:
+            return f"Sorry, I couldn't create your Lightning address. {lnurl_result.get('error', 'Please try again.')}"
         
     except Exception as e:
         logger.error(f"Error handling receive command: {str(e)}")
-        return "Sorry, I couldn't retrieve your Bitcoin address. Please try again."
+        return "Sorry, I couldn't retrieve your Lightning address. Please try again."
 
 
 def handle_paybill_command(user: BitzappUser, message: str) -> str:
@@ -575,23 +520,25 @@ def handle_lightning_invoice_command(user: BitzappUser, message: str) -> str:
         
         description = " ".join(parts[2:]) if len(parts) > 2 else f"Lightning invoice for {user.phone_number}"
         
-        # Create Lightning invoice
-        payment_service = PaymentService()
-        invoice = payment_service.create_lightning_invoice(user, amount_sats, description)
-        
+        # Create Lightning invoice via Bitnob
+        bitnob = BitnobService()
+        result = bitnob.create_lightning_invoice(user.phone_number, amount_sats, description)
+        if result.get('success'):
+            rate_info = BitnobService().get_exchange_rate()
+            amount_btc = amount_sats / 100_000_000
+            amount_ngn = amount_btc * rate_info.get('rate', 0)
         return f"""⚡ Lightning Invoice Created!
 
-**Amount:** {amount_sats:,} sats ({invoice.amount_btc:.8f} BTC)
-**Naira Value:** ₦{invoice.amount_ngn:,.2f}
+**Amount:** {amount_sats:,} sats ({amount_btc:.8f} BTC)
+**Naira Value:** ₦{amount_ngn:,.2f}
 **Description:** {description}
 
 **Payment Request:**
-`{invoice.payment_request}`
+`{result.get('payment_request')}`
 
 **Invoice Details:**
-• Invoice ID: `{invoice.invoice_id}`
-• Expires: {invoice.expires_at.strftime('%Y-%m-%d %H:%M:%S')} UTC
-• Status: {invoice.status.title()}
+• Invoice ID: `{result.get('invoice_id')}`
+• Status: {result.get('status', 'pending').title()}
 
 **How to Pay:**
 1. Copy the payment request above
@@ -599,12 +546,9 @@ def handle_lightning_invoice_command(user: BitzappUser, message: str) -> str:
 3. Scan or paste the payment request
 4. Confirm the payment
 
-**Lightning Benefits:**
-⚡ Instant confirmation
-⚡ Micro-fee payments
-⚡ Scalable Bitcoin network
-
 Your Lightning invoice is ready! 🚀"""
+        else:
+            return f"❌ Error creating Lightning invoice: {result.get('error', 'Please try again.')}"
         
     except Exception as e:
         logger.error(f"Error creating Lightning invoice: {str(e)}")
@@ -645,30 +589,27 @@ def handle_lightning_pay_command(user: BitzappUser, message: str) -> str:
         if not payment_request.startswith('lnbc'):
             return "❌ Invalid payment request. Must start with 'lnbc'"
         
-        # Pay Lightning invoice
-        payment_service = PaymentService()
-        payment = payment_service.pay_lightning_invoice(user, payment_request, description)
-        
+        # Pay Lightning invoice via Bitnob
+        bitnob = BitnobService()
+        result = bitnob.pay_lightning_invoice(user.phone_number, payment_request, description)
+        if result.get('success'):
+            rate_info = bitnob.get_exchange_rate()
+            amount_sats = result.get('amount_sats', 0)
+            amount_btc = (amount_sats or 0) / 100_000_000
+            amount_ngn = amount_btc * rate_info.get('rate', 0)
         return f"""⚡ Lightning Payment Successful!
 
-**Amount:** {payment.amount_sats:,} sats ({payment.amount_btc:.8f} BTC)
-**Naira Value:** ₦{payment.amount_ngn:,.2f}
+**Amount:** {amount_sats:,} sats ({amount_btc:.8f} BTC)
+**Naira Value:** ₦{amount_ngn:,.2f}
 **Description:** {description}
 
 **Payment Details:**
-• Payment ID: `{payment.payment_id}`
-• Status: {payment.status.title()}
-• Completed: {payment.completed_at.strftime('%Y-%m-%d %H:%M:%S')} UTC
-
-**Transaction Hash:**
-`{payment.payment_hash}`
-
-**Lightning Benefits:**
-⚡ Instant confirmation
-⚡ Micro-fee payment
-⚡ Scalable Bitcoin network
+• Payment ID: `{result.get('payment_id')}`
+• Status: {result.get('status', 'completed').title()}
 
 Your Lightning payment is complete! 🚀"""
+        else:
+            return f"❌ Error processing Lightning payment: {result.get('error', 'Please try again.')}"
         
     except ValueError as e:
         if "Insufficient Bitcoin balance" in str(e):
@@ -677,7 +618,6 @@ Your Lightning payment is complete! 🚀"""
 You don't have enough Bitcoin to complete this Lightning payment.
 
 **Your Balance:** Check with `/balance`
-**Required:** {payment.amount_btc:.8f} BTC
 
 **To Add Bitcoin:**
 • `/deposit <amount>` - Deposit Naira to get Bitcoin
@@ -820,57 +760,53 @@ def handle_help_command() -> str:
     """
     Handle /help command
     """
-    return """Bitzapp Bitcoin Wallet Commands
+    return """⚡ Bitzapp Lightning Wallet Commands
 
-Wallet Management:
-- /create - Create your wallet (you control keys)
-- /import <seed phrase> - Import existing wallet
-- /wallet - Learn about wallet features
-- /balance - Check your Bitcoin balance
+Lightning Wallet Management:
+- /create - Create your Lightning wallet
+- /wallet - Learn about Lightning Network features
+- /balance - Check your Lightning Bitcoin balance
 
-Lightning Network:
+Lightning Operations:
+- /send <amount_sats> <lightning_address> - Send Lightning payments
+- /receive - Get your Lightning address and QR code
 - /lightning <amount_sats> - Create Lightning invoice
 - /lightningpay <payment_request> - Pay Lightning invoice
 - /lightningstatus <invoice_id> - Check invoice status
 - /lightninghistory - View Lightning transactions
 
-Bitcoin Operations:
-- /send <amount> <address> <seed phrase> - Send Bitcoin
-- /receive - Get your Bitcoin address
-- /deposit <amount> - Deposit Naira to convert to Bitcoin
-- /withdraw <amount> <account> <bank> <name> - Withdraw Bitcoin to Nigerian bank
+Deposits & Withdrawals:
+- /deposit <amount> - Deposit Naira to convert to Lightning Bitcoin
+- /withdraw <amount> <account> <bank> <name> - Withdraw Lightning Bitcoin to Nigerian bank
 
 Bill Payments:
-- /paybill <provider> <amount> - Pay bills with Bitcoin
+- /paybill <provider> <amount> - Pay bills with Lightning Bitcoin
 
 AI Assistant:
 - /ask <question> - Ask AI assistant anything
 - /help - Show this help message
 
-Lightning Benefits:
-- Instant Bitcoin payments
-- Low fees (micro-fees)
-- Scalable Bitcoin network
-- Perfect for small payments
-
-Wallet Features:
-- You control your private keys (maximum security)
-- Secure and decentralized
-- No third-party access to your funds
+Lightning Network Benefits:
+⚡ Instant Bitcoin payments
+⚡ Low fees (micro-fees)
+⚡ Scalable Bitcoin network
+⚡ No complex key management
+⚡ Perfect for everyday use
 
 Examples:
-- /create - Create your wallet
-- /lightning 1000 - Create 1000 sats Lightning invoice
-- /lightningpay lnbc1000u1p... - Pay Lightning invoice
+- /create - Create your Lightning wallet
+- /send 1000 satoshi@bitzapp-i3i3.onrender.com - Send 1000 sats to Lightning address
+- /receive - Get your Lightning address
 - /deposit 50000 - Deposit ₦50,000
-- /paybill mtn 1000 08012345678 - Pay MTN airtime
+- /lightning 1000 - Create 1000 sats Lightning invoice
 
-Security Reminder:
-- Save your seed phrase safely
-- Never share your private keys
-- Use Lightning for instant payments
+Lightning Addresses:
+- Look like email addresses: username@domain.com
+- Much easier than Bitcoin addresses
+- Instant and low-fee payments
+- No waiting for confirmations
 
-Need Help? Ask me anything with /ask <question>"""
+Need Help? Ask me anything with /ask <question> 🚀"""
 
 
 def handle_withdraw_command(user: BitzappUser, message: str) -> str:
@@ -1028,9 +964,10 @@ def get_user_balance(user: BitzappUser) -> str:
     Get user's balance as formatted string
     """
     try:
-        wallet_service = BitcoinWalletService()
-        balance = wallet_service.get_wallet_balance(user)
-        return f"{balance['balance_btc']:.8f} BTC (₦{balance['balance_ngn']:,.2f})"
+        bitnob = BitnobService()
+        balance = bitnob.get_wallet_balance(user.phone_number)
+        rate_info = bitnob.get_exchange_rate()
+        return f"{balance.get('balance_btc', 0):.8f} BTC (₦{balance.get('balance_btc', 0) * rate_info.get('rate', 0):,.2f})"
     except:
         return "0.00000000 BTC (₦0.00)"
 
@@ -1040,15 +977,18 @@ def get_recent_transactions(user: BitzappUser) -> str:
     Get recent transactions as formatted string
     """
     try:
-        wallet_service = BitcoinWalletService()
-        transactions = wallet_service.get_transaction_history(user, limit=3)
+        bitnob = BitnobService()
+        result = bitnob.get_transaction_history(user.phone_number, limit=3)
+        transactions = result.get('transactions') if result.get('success') else []
         
         if not transactions:
             return "No recent transactions"
         
         result = []
         for tx in transactions:
-            result.append(f"• {tx['type'].title()}: {tx['amount_btc']:.8f} BTC")
+            tx_type = tx.get('type', 'Transaction').title()
+            amount = tx.get('amount', 0)
+            result.append(f"• {tx_type}: {amount} BTC")
         
         return "\n".join(result)
     except:

@@ -17,10 +17,22 @@ Including another URLconf
 from django.contrib import admin
 from django.urls import path
 from core.views import whatsapp_webhook, landing_page, docs_page
+from core.lnurl_views import (
+    lnurl_callback, 
+    lnurl_pay_request, 
+    lnurl_withdraw_request, 
+    lnurl_withdraw_callback
+)
 
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('', landing_page, name='landing_page'),
     path('docs/', docs_page, name='docs_page'),
     path('webhook/whatsapp/', whatsapp_webhook, name='whatsapp_webhook'),
+    
+    # LNURL Lightning Address endpoints
+    path('.well-known/lnurlp/<str:username>', lnurl_callback, name='lnurl_callback'),
+    path('lnurl/callback/<str:username>', lnurl_pay_request, name='lnurl_pay_request'),
+    path('lnurl/withdraw/<str:username>', lnurl_withdraw_request, name='lnurl_withdraw_request'),
+    path('lnurl/withdraw/<str:username>/callback', lnurl_withdraw_callback, name='lnurl_withdraw_callback'),
 ]
