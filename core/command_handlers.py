@@ -165,7 +165,7 @@ Send the exact amount and we'll process it within 24 hours! 🚀"""
         result = bitnob.deposit_naira(user.phone_number, float(amount))
         
         if result.get("success"):
-        return f""" Deposit Request Created
+            return f""" Deposit Request Created
 
 **Amount:** ₦{amount:,.2f}
 **Bitcoin Equivalent:** {result.get('amount_btc', 0):.8f} BTC
@@ -244,7 +244,7 @@ def handle_send_command(user: BitzappUser, message: str) -> str:
     try:
         # Extract components from message
         parts = message.split()
-            if len(parts) < 3:
+        if len(parts) < 3:
             return """⚡ Send Lightning Payments
 
 **Usage:** /send <amount_sats> <lightning_address>
@@ -527,7 +527,7 @@ def handle_lightning_invoice_command(user: BitzappUser, message: str) -> str:
             rate_info = BitnobService().get_exchange_rate()
             amount_btc = amount_sats / 100_000_000
             amount_ngn = amount_btc * rate_info.get('rate', 0)
-        return f"""⚡ Lightning Invoice Created!
+            return f"""⚡ Lightning Invoice Created!
 
 **Amount:** {amount_sats:,} sats ({amount_btc:.8f} BTC)
 **Naira Value:** ₦{amount_ngn:,.2f}
@@ -597,7 +597,7 @@ def handle_lightning_pay_command(user: BitzappUser, message: str) -> str:
             amount_sats = result.get('amount_sats', 0)
             amount_btc = (amount_sats or 0) / 100_000_000
             amount_ngn = amount_btc * rate_info.get('rate', 0)
-        return f"""⚡ Lightning Payment Successful!
+            return f"""⚡ Lightning Payment Successful!
 
 **Amount:** {amount_sats:,} sats ({amount_btc:.8f} BTC)
 **Naira Value:** ₦{amount_ngn:,.2f}
